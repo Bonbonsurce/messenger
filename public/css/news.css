@@ -2,12 +2,11 @@ body {
     font-family: Arial, sans-serif;
     background-color: #f2f5f8;
     color: #333;
+    margin: 0; /* Убираем отступы по умолчанию */
 }
 
 .container {
     display: flex;
-    flex-direction: row;
-    justify-content: space-between;
     max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
@@ -18,6 +17,7 @@ body {
     background-color: #c7ecee;
     border-radius: 10px;
     padding: 10px;
+    flex-shrink: 0; /* Не позволяет элементу уменьшаться более, чем его изначальная ширина */
 }
 
 .navigation-panel ul {
@@ -44,8 +44,14 @@ body {
 }
 
 .news-section,
+.dialogs-section,
+.additional-form {
+    flex-grow: 1; /* Расширяется на оставшееся пространство */
+    margin-left: 20px; /* Добавляем небольшой отступ между блоками */
+}
+
+.news-section,
 .dialogs-section {
-    flex: 1;
     border: 1px solid #c7ecee;
     border-radius: 10px;
     padding: 10px;
@@ -56,7 +62,6 @@ body {
 #news-form,
 #dialog-form,
 #additional-form {
-    width: 100%;
     max-width: 800px;
     margin: 20px auto;
     padding: 20px;
@@ -94,4 +99,9 @@ body {
 .news p {
     margin-bottom: 0;
     color: #555;
+}
+
+/* Стили для дополнительной формы */
+.additional-form {
+    max-width: 15vw; /* Примерно 15% от ширины экрана */
 }

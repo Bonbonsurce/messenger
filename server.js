@@ -74,7 +74,7 @@ app.get('/news', (req, res) => {
 });
 
 app.get('/message', (req, res) => {
-    const filePath = __dirname + '/public/templates/news/news.html';
+    const filePath = __dirname + '/public/templates/messages/message.html';
     res.sendFile(filePath);
 });
 
