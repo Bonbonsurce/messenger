@@ -1,0 +1,97 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f2f5f8;
+    color: #333;
+}
+
+.container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.navigation-panel {
+    width: 200px;
+    background-color: #c7ecee;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.navigation-panel ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.navigation-panel ul li {
+    margin-bottom: 10px;
+}
+
+.navigation-panel ul li a {
+    display: block;
+    text-decoration: none;
+    color: #333;
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+.navigation-panel ul li a.active {
+    font-weight: bold;
+    background-color: #3498db;
+    color: #fff;
+}
+
+.news-section,
+.dialogs-section {
+    flex: 1;
+    border: 1px solid #c7ecee;
+    border-radius: 10px;
+    padding: 10px;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#news-form,
+#dialog-form,
+#additional-form {
+    width: 100%;
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Стили для динамически добавляемых диалогов */
+.dialog {
+    margin-bottom: 20px;
+    padding: 10px;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.dialog h3 {
+    margin-top: 0;
+    color: #3498db;
+}
+
+.dialog p {
+    margin-bottom: 0;
+    color: #555;
+}
+
+/* Стили для заголовков новостей */
+.news h2 {
+    margin-top: 0;
+    color: #3498db;
+}
+
+/* Стили для текста новостей */
+.news p {
+    margin-bottom: 0;
+    color: #555;
+}

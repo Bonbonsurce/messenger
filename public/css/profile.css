@@ -1,0 +1,110 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f2f5f8;
+    color: #333;
+}
+
+.container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.navigation-panel {
+    width: 200px;
+    background-color: #c7ecee;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.navigation-panel ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.navigation-panel ul li {
+    margin-bottom: 10px;
+}
+
+.navigation-panel ul li a {
+    display: block;
+    text-decoration: none;
+    color: #333;
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+.navigation-panel ul li a.active {
+    font-weight: bold;
+    background-color: #3498db;
+    color: #fff;
+}
+
+.profile-section {
+    flex: 1;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.profile-section h2 {
+    margin-top: 0;
+    color: #3498db;
+}
+
+.user-info {
+    margin-top: 20px;
+}
+
+.user-info p {
+    margin-bottom: 10px;
+}
+
+/* Стили для кнопок */
+.edit-button,
+.add-photo-button {
+    margin-top: 10px;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 5px;
+    background-color: #3498db;
+    color: #fff;
+    cursor: pointer;
+}
+
+.edit-button:hover,
+.add-photo-button:hover {
+    background-color: #2980b9;
+}
+
+/* Стили для блока с новостями */
+.news-section {
+    margin-top: 20px;
+}
+
+.news-section h3 {
+    color: #3498db;
+}
+
+/* Стили для блока с фотографиями */
+.photos-section {
+    margin-top: 20px;
+}
+
+.photos-section h3 {
+    color: #3498db;
+}
+
+/* Стили для списка фотографий */
+.photos-section ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.photos-section ul li {
+    margin-bottom: 10px;
+}

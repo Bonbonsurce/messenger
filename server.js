@@ -73,6 +73,15 @@ app.get('/news', (req, res) => {
     res.sendFile(filePath);
 });
 
+app.get('/message', (req, res) => {
+    const filePath = __dirname + '/public/templates/news/news.html';
+    res.sendFile(filePath);
+});
+
+app.get('/profile', (req, res) => {
+    const filePath = __dirname + '/public/templates/profile/profile.html';
+    res.sendFile(filePath);
+});
 
 app.post('/register', (req, res) => {
     const { username, email, password, profile_info } = req.body;
