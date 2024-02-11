@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Добро пожаловать</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Bonbonsurce/messenger/public/css/style_1.css">
+    <script src="https://cdn.jsdelivr.net/gh/Bonbonsurce/messenger/public/scripts/authentication.js"></script>
+</head>
+<body>
+    <h1>Добро пожаловать!</h1>
+    <button onclick="showLoginForm()">Войти</button>
+    <button onclick="showRegistrationForm()">Зарегистрироваться</button>
+
+    <div id="loginForm" style="display: none;">
+        <h2>Форма входа</h2>
+        <form action="/login" method="post">
+            <input type="text" name="username" placeholder="Имя пользователя" required><br>
+            <input type="password" name="password" placeholder="Пароль" required><br>
+            <input type="submit" value="Войти">
+        </form>
+    </div>
+
+    <div id="registrationForm" style="display: none;">
+        <h2>Форма регистрации</h2>
+        <form action="/register" method="post">
+            <input type="text" name="username" placeholder="Имя пользователя" required><br>
+            <input type="email" name="email" placeholder="Email" required><br>
+            <input type="password" name="password" placeholder="Пароль" required><br>
+            <textarea name="profile_info" placeholder="Информация о профиле"></textarea><br>
+            <input type="submit" value="Зарегистрироваться">
+        </form>
+    </div>
+
+    <script>
+        function showLoginForm() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registrationForm').style.display = 'none';
+        }
+
+        function showRegistrationForm() {
+            document.getElementById('registrationForm').style.display = 'block';
+            document.getElementById('loginForm').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
