@@ -37,16 +37,50 @@ app.get('/welcome', (req, res) => {
 
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
-    // Здесь обработайте логин и пароль, проверьте их в базе данных и предоставьте доступ при успешной аутентификации
+
+    // Запрос к базе данных для поиска пользователя с указанным именем пользователя
+    const query = {
+        text: 'SELECT * FROM users WHERE username = $1',
+        values: [username]
+    };
+
+    pool.query(query, (err, result) => {
+        if (err) {
+            console.error('Ошибка при выполнении запроса:', err);
+            res.status(500).send('Ошибка при выполнении запроса');
+            return;
+        }
+
+        if (result.rows.length === 0) {
+            // Если пользователь с указанным именем пользователя не найден
+            res.status(401).send('Неправильное имя пользователя или пароль');
+            return;
+        }
+
+        const user = result.rows[0];
+        // Здесь вы можете сравнить хэш пароля из базы данных с введенным паролем
+        if (user.user_password === password) {
+            res.redirect('/news');
+        } else {
+            // Пароли не совпали
+            res.status(401).send('Неправильное имя пользователя или пароль');
+        }
+    });
 });
+
+app.get('/news', (req, res) => {
+    const filePath = __dirname + '/public/templates/news/news.html';
+    res.sendFile(filePath);
+});
+
 
 app.post('/register', (req, res) => {
     const { username, email, password, profile_info } = req.body;
     const registration_date = new Date().toISOString();
     const password_hash = generateHash(password); // Генерируйте хэш пароля перед сохранением в базу данных
     const query = {
-        text: 'INSERT INTO users(username, email, password_hash, registration_date, profile_info) VALUES($1, $2, $3, $4, $5)',
-        values: [username, email, password_hash, registration_date, profile_info]
+        text: 'INSERT INTO users(username, email, password_hash, registration_date, profile_info, user_password) VALUES($1, $2, $3, $4, $5, $6)',
+        values: [username, email, password_hash, registration_date, profile_info, password]
     };
 
     pool.query(query, (err, result) => {
