@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Добро пожаловать</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Bonbonsurce/messenger/public/css/style_1.css">
+    <link rel="stylesheet" href="https://raw.githack.com/Bonbonsurce/messenger/main/public/css/style_1.css">
     <script src="https://cdn.jsdelivr.net/gh/Bonbonsurce/messenger/public/scripts/authentication.js"></script>
 </head>
 <body>
@@ -12,6 +12,7 @@
     <button onclick="showRegistrationForm()">Зарегистрироваться</button>
 
     <div id="loginForm" style="display: none;">
+        <span class="close-button" onclick="hideLoginForm()">✖</span>
         <h2>Форма входа</h2>
         <form action="/login" method="post">
             <input type="text" name="username" placeholder="Имя пользователя" required><br>
@@ -21,6 +22,7 @@
     </div>
 
     <div id="registrationForm" style="display: none;">
+        <span class="close-button" onclick="hideRegistrationForm()">✖</span>
         <h2>Форма регистрации</h2>
         <form action="/register" method="post">
             <input type="text" name="username" placeholder="Имя пользователя" required><br>
