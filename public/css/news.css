@@ -60,14 +60,24 @@ body {
 }
 
 #news-form,
-#dialog-form,
+.dialog-div,
 #additional-form {
     max-width: 800px;
     margin: 20px auto;
-    padding: 20px;
+    padding: 30px;
     background-color: #fff;
     border-radius: 10px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 2px solid #3498db; /* цвет границы */
+}
+
+.auth-link {
+    border: 1px solid #000;
+    padding: 5px 10px;
+    border-radius: 5px;
+    background-color: #3498db;
+    color: white;
+    text-decoration: none;
 }
 
 /* Стили для динамически добавляемых диалогов */

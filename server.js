@@ -84,9 +84,10 @@ app.post('/login', (req, res) => {
             // После успешной аутентификации
             req.session.authenticated = true; // Устанавливаем флаг успешной аутентификации в сессии
             req.session.userId = user.user_id;
-            req.session.username = user.name;
+            req.session.username = user.username;
             req.session.mail = user.email;
             req.session.profile_info = user.profile_info;
+            req.session.user_date = user.registration_date;
             res.redirect('/news');
         } else {
             // Пароли не совпали
@@ -110,14 +111,89 @@ app.get('/news', (req, res) => {
     res.sendFile(filePath);
 });
 
+//путь для отображения информации о диалоге с человеком - состоит из текста, кто отправил, кто получил
+app.get('/conversation', (req, res) => {
+    const idReceiver = req.query.idReceiver;
+
+    req.session.userReceiver = idReceiver;
+    const user_send = req.session.userId;
+    const user_received = req.session.userReceiver;
+
+
+    if (!user_send) {
+        res.status(401).send('Пользователь не аутентифицирован');
+        return;
+    }
+    const query = {
+        text: `
+            SELECT message_text, sender_id, receiver_id
+            FROM messages
+            WHERE (sender_id = $1 AND receiver_id = $2)
+               OR (sender_id = $2 AND receiver_id = $1);
+      `,
+        values: [user_send, user_received],
+    };
+
+    pool.query(query, (err, result) => {
+        if (err) {
+            res.status(500).send('Ошибка при выполнении запроса');
+            return;
+        }
+        const messagesConversation = result.rows;
+
+        // Отправляем данные в формате JSON обратно клиенту
+        res.json({ messages: messagesConversation });
+    });
+});
+
+app.get('/all_mes_show', (req, res) => {
+    const userId = req.session.userId;
+    if (!userId) {
+        res.status(401).send('Пользователь не аутентифицирован');
+        return;
+    }
+    const query = {
+        text: `
+        SELECT users.username, users.user_id
+        FROM messages
+        JOIN users ON messages.receiver_id = users.user_id
+        WHERE messages.sender_id = $1;
+      `,
+        values: [userId],
+    };
+
+    pool.query(query, (err, result) => {
+        if (err) {
+            res.status(500).send('Ошибка при выполнении запроса');
+            return;
+        }
+        const receiverUsers = result.rows;
+
+        // Отправляем данные в формате JSON обратно клиенту
+        res.json({ users: receiverUsers });
+    });
+});
+
 app.get('/message', (req, res) => {
-    const filePath = __dirname + '/public/templates/messages/message.html';
-    res.sendFile(filePath);
+    // Проверяем, аутентифицирован ли пользователь
+    if (req.session.authenticated) {
+        const filePath = __dirname + '/public/templates/messages/message.html';
+        res.sendFile(filePath);
+    } else {
+        // Если пользователь не аутентифицирован, перенаправляем его на страницу авторизации
+        res.redirect('/welcome');
+    }
 });
 
 app.get('/profile', (req, res) => {
-    const filePath = __dirname + '/public/templates/profile/profile.html';
-    res.sendFile(filePath);
+    // Проверяем, аутентифицирован ли пользователь
+    if (req.session.authenticated) {
+        const filePath = __dirname + '/public/templates/profile/profile.html';
+        res.sendFile(filePath);
+    } else {
+        // Если пользователь не аутентифицирован, перенаправляем его на страницу авторизации
+        res.redirect('/welcome');
+    }
 });
 
 app.post('/register', (req, res) => {
