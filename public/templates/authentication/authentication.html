@@ -4,12 +4,19 @@
     <meta charset="UTF-8">
     <title>Добро пожаловать</title>
     <link rel="stylesheet" href="https://raw.githack.com/Bonbonsurce/messenger/main/public/css/style_1.css">
-    <script src="https://cdn.jsdelivr.net/gh/Bonbonsurce/messenger/public/scripts/authentication.js"></script>
+    <script src="https://raw.githack.com/Bonbonsurce/messenger/main/public/scripts/authentication.js"></script>
+    <style>
+        button {
+            width: 13em;
+        }
+    </style>
 </head>
 <body>
     <h1>Добро пожаловать!</h1>
-    <button onclick="showLoginForm()">Войти</button>
-    <button onclick="showRegistrationForm()">Зарегистрироваться</button>
+    <div>
+        <button onclick="showLoginForm()" class="auth-btn">Войти</button>
+        <button onclick="showRegistrationForm()">Зарегистрироваться</button>
+    </div>
 
     <div id="loginForm" style="display: none;">
         <span class="close-button" onclick="hideLoginForm()">✖</span>

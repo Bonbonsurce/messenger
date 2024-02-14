@@ -7,6 +7,11 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
+    flex-direction: column;
+}
+
+.auth-btn {
+    width: 13em;
 }
 
 h1 {

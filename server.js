@@ -1,3 +1,4 @@
+const https = require('https');
 const express = require('express');
 const app = express();
 const { Pool } = require('pg');
@@ -5,6 +6,19 @@ const fs = require('fs');
 const hostname = '127.0.0.1';
 const port = 3000;
 const bodyParser = require('body-parser');
+const session = require('express-session');
+
+app.use(session({
+    secret: 'secret', // Секретный ключ для подписи куки с сессией
+    resave: false,
+    saveUninitialized: false,
+    cookie: { maxAge: 24 * 60 * 60 * 1000 } // Установка длительности сессии на 1 день (в миллисекундах)
+}));
+
+const options = {
+    key: fs.readFileSync('server.key'),
+    cert: fs.readFileSync('server.cert')
+};
 
 const pool = new Pool({
     user: 'postgres',
@@ -31,8 +45,15 @@ app.get('/', (req, res) => {
 
 
 app.get('/welcome', (req, res) => {
-    const filePath = __dirname + '/public/templates/authentication/authentication.html';
-    res.sendFile(filePath);
+    // Проверяем, аутентифицирован ли пользователь
+    if (req.session.authenticated) {
+        // Если пользователь уже аутентифицирован, перенаправляем его на страницу новостей
+        res.redirect('/news');
+    } else {
+        // Если пользователь не аутентифицирован, показываем страницу авторизации
+        const filePath = __dirname + '/public/templates/authentication/authentication.html';
+        res.sendFile(filePath);
+    }
 });
 
 app.post('/login', (req, res) => {
@@ -60,6 +81,12 @@ app.post('/login', (req, res) => {
         const user = result.rows[0];
         // Здесь вы можете сравнить хэш пароля из базы данных с введенным паролем
         if (user.user_password === password) {
+            // После успешной аутентификации
+            req.session.authenticated = true; // Устанавливаем флаг успешной аутентификации в сессии
+            req.session.userId = user.user_id;
+            req.session.username = user.name;
+            req.session.mail = user.email;
+            req.session.profile_info = user.profile_info;
             res.redirect('/news');
         } else {
             // Пароли не совпали
@@ -69,6 +96,16 @@ app.post('/login', (req, res) => {
 });
 
 app.get('/news', (req, res) => {
+    // Проверяем, аутентифицирован ли пользователь
+    if (req.session.authenticated) {
+        // Если пользователь аутентифицирован, показываем страницу новостей
+        const filePath = __dirname + '/public/templates/news/news.html';
+        res.sendFile(filePath);
+    } else {
+        // Если пользователь не аутентифицирован, перенаправляем его на страницу авторизации
+        res.redirect('/welcome');
+    }
+
     const filePath = __dirname + '/public/templates/news/news.html';
     res.sendFile(filePath);
 });
@@ -101,8 +138,8 @@ app.post('/register', (req, res) => {
     });
 });
 
-const server = app.listen(3000, () => {
-    console.log(`Server running at http://${hostname}:${port}/`);
+const server = https.createServer(options, app).listen(port, () => {
+    console.log(`Server running at https://${hostname}:${port}/`);
 });
 
 const crypto = require('crypto');

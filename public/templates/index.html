@@ -2,11 +2,63 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Мессенджер</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Месенджер</title>
     <link rel="stylesheet" href="https://raw.githack.com/Bonbonsurce/messenger/main/public/css/style_1.css">
-
+    <style>
+        /* Добавьте стили здесь */
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 100vh;
+            margin: 0;
+        }
+        header {
+            text-align: center;
+            margin-top: 20vh; /* Расположение сверху по центру */
+        }
+        main {
+            text-align: center;
+            margin-top: 20px;
+        }
+        footer {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .auth-link {
+            border: 1px solid #000;
+            padding: 5px 10px;
+            border-radius: 5px;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+        }
+        .auth-div {
+            align-content: center;
+            flex-grow: 1; /* Занимает все доступное пространство */
+        }
+    </style>
 </head>
 <body>
-    <a href="/welcome"> Аутентификация </a>
+    <header>
+        <h1>Спесенджер</h1>
+    </header>
+
+    <main>
+        <section class="welcome">
+            <h2>Добро пожаловать в Месенджер!</h2>
+            <p>Мы рады видеть вас здесь. Присоединяйтесь к нашему сообществу и общайтесь с друзьями!</p>
+        </section>
+    </main>
+    <div class = "auth-div">
+        <a href="/welcome" class="auth-link">Авторизация</a>
+    </div>
+    <footer>
+        <p>&copy; 2024 Месенджер. Все права защищены.</p>
+    </footer>
+
+
 </body>
 </html>
