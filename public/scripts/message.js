@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 dialogDiv.appendChild(textMessage);
 
                 const RecieverName = document.createElement('p');
-                RecieverName.textContent = message.receiver_id;
+                RecieverName.textContent = message.username;
                 dialogDiv.appendChild(RecieverName);
             });
 

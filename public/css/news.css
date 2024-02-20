@@ -43,6 +43,10 @@ body {
     color: #fff;
 }
 
+.dialogs-main {
+    width: 70%;
+}
+
 .news-section,
 .dialogs-section,
 .additional-form {
