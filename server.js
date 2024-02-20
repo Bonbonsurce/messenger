@@ -37,6 +37,7 @@ pool.on('error', (err) => {
 });
 
 app.use(bodyParser.urlencoded({ extended: true }));
+//const newsRoute = require('./routes/rout_news');
 
 app.get('/', (req, res) => {
     const filePath = __dirname + '/public/templates/index.html';
@@ -94,6 +95,32 @@ app.post('/login', (req, res) => {
             res.status(401).send('Неправильное имя пользователя или пароль');
         }
     });
+});
+
+app.post('/send_message', (req, res) => {
+    const receiverId = req.body.receiver_id;
+    const senderId = req.body.sender_user_id;
+    const textMessage = req.body.text_message;
+    console.log(senderId);
+    console.log(receiverId);
+    const insertQuery = `
+        INSERT INTO public.messages(message_text, post_time, sender_id, receiver_id)
+        VALUES ($1, NOW(), $2, $3)
+    `;
+    const values = [textMessage, senderId, receiverId];
+
+    pool.query(insertQuery, values, (error, results) => {
+        if (error) {
+            console.error('Ошибка выполнения запроса:', error);
+            //res.redirect('/message');
+            res.status(500).send('Произошла ошибка при выполнении запроса');
+        } else {
+            console.log('Данные успешно вставлены в базу данных');
+            res.redirect(`/message?user_id=${receiverId}`);
+            //res.status(200).send('Данные успешно вставлены в базу данных');
+        }
+    });
+
 });
 
 app.get('/news', (req, res) => {
@@ -154,7 +181,7 @@ app.get('/all_mes_show', (req, res) => {
     }
     const query = {
         text: `
-        SELECT users.username, users.user_id
+        SELECT DISTINCT users.username, users.user_id
         FROM messages
         JOIN users ON messages.receiver_id = users.user_id
         WHERE messages.sender_id = $1;
@@ -177,8 +204,15 @@ app.get('/all_mes_show', (req, res) => {
 app.get('/message', (req, res) => {
     // Проверяем, аутентифицирован ли пользователь
     if (req.session.authenticated) {
-        const filePath = __dirname + '/public/templates/messages/message.html';
-        res.sendFile(filePath);
+        fs.readFile(__dirname + '/public/templates/messages/message.html', 'utf8', (err, data) => {
+            // Заменяем значение session_user_id в HTML-файле на значение из сессии
+            const updatedData = data.replace(/<%= session_user_id %>/g, req.session.userId);
+
+            // Отправляем обновленный HTML-файл клиенту
+            res.send(updatedData);
+        })
+        //res.sendFile(__dirname + '/public/templates/messages/message.html', { session_user_id: req.session.userId });
+
     } else {
         // Если пользователь не аутентифицирован, перенаправляем его на страницу авторизации
         res.redirect('/welcome');

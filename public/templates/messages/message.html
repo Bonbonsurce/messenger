@@ -6,6 +6,21 @@
     <title>Сообщения</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Bonbonsurce/messenger/public/css/news.css">
     <script src="https://raw.githack.com/Bonbonsurce/messenger/main/public/scripts/message.js"></script>
+    <style>
+        .dialog-div {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 30px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: 2px solid #3498db; /* цвет границы */
+        }
+
+        .auth-link {
+            text-decoration: none;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -17,8 +32,18 @@
                 <li><a href="/files">Файлы</a></li>
             </ul>
         </div>
-        <div class="dialogs-section">
+        <div class="dialogs-main">
+            <div class="dialogs-section">
 
+            </div>
+            <div id="messageForm" style="display: none;">
+                <form action="/send_message" method="post">
+                    <input type="hidden" name="receiver_id" id="receiver_id"  value="">
+                    <input type="hidden" name="sender_user_id" id="sender_user_id" value="<%= session_user_id %>">
+                    <input type="text" name="text_message" placeholder="Введите ваше сообщение">
+                    <input type="submit" value="Отправить">
+                </form>
+            </div>
         </div>
         <div class="additional-form">
             <!-- Дополнительная форма справа -->
@@ -27,5 +52,20 @@
             </form>
         </div>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const userId = urlParams.get('user_id');
+
+            document.getElementById('sender_user_id').value = 6;
+
+            if (userId) {
+                // Если параметр user_id есть в адресной строке, показываем форму
+                document.getElementById('messageForm').style.display = 'block';
+                document.getElementById('receiver_id').value = userId;
+            }
+        });
+    </script>
 </body>
+
 </html>
