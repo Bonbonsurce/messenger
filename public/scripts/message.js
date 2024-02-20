@@ -55,8 +55,11 @@ document.addEventListener('DOMContentLoaded', async function() {
             messages.forEach(message => {
                 const textMessage = document.createElement('p');
                 textMessage.textContent = message.message_text;
-
                 dialogDiv.appendChild(textMessage);
+
+                const RecieverName = document.createElement('p');
+                RecieverName.textContent = message.receiver_id;
+                dialogDiv.appendChild(RecieverName);
             });
 
             dialogsSection.appendChild(dialogDiv);

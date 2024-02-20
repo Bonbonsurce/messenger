@@ -153,10 +153,11 @@ app.get('/conversation', (req, res) => {
     }
     const query = {
         text: `
-            SELECT message_text, sender_id, receiver_id
-            FROM messages
-            WHERE (sender_id = $1 AND receiver_id = $2)
-               OR (sender_id = $2 AND receiver_id = $1);
+            SELECT m.message_text, m.sender_id, m.receiver_id, u.username
+            FROM messages m
+            JOIN users u ON m.sender_id = u.user_id
+            WHERE (m.sender_id = $1 AND m.receiver_id = $2)
+               OR (m.sender_id = $2 AND m.receiver_id = $1);
       `,
         values: [user_send, user_received],
     };
