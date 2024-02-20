@@ -15,6 +15,8 @@ app.use(session({
     cookie: { maxAge: 24 * 60 * 60 * 1000 } // Установка длительности сессии на 1 день (в миллисекундах)
 }));
 
+app.use(express.static(__dirname + '/public'));
+
 const options = {
     key: fs.readFileSync('server.key'),
     cert: fs.readFileSync('server.cert')

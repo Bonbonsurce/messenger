@@ -54,12 +54,12 @@ document.addEventListener('DOMContentLoaded', async function() {
 
             messages.forEach(message => {
                 const textMessage = document.createElement('p');
-                textMessage.textContent = message.message_text;
+                textMessage.textContent = message.username + ': ' + message.message_text;
                 dialogDiv.appendChild(textMessage);
 
-                const RecieverName = document.createElement('p');
+                /*const RecieverName = document.createElement('p');
                 RecieverName.textContent = message.username;
-                dialogDiv.appendChild(RecieverName);
+                dialogDiv.appendChild(RecieverName);*/
             });
 
             dialogsSection.appendChild(dialogDiv);

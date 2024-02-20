@@ -45,23 +45,26 @@ body {
 
 .dialogs-main {
     width: 70%;
+    height: auto;
 }
 
 .news-section,
 .dialogs-section,
-.additional-form {
+.additional-form,
+#messageForm {
     flex-grow: 1; /* Расширяется на оставшееся пространство */
     margin-left: 20px; /* Добавляем небольшой отступ между блоками */
+    height: auto;
 }
 
 .news-section,
-.dialogs-section {
+.dialogs-section,
+#messageForm {
     border: 1px solid #c7ecee;
     border-radius: 10px;
     padding: 10px;
     background-color: #fff;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    height: 70%;
     width: 70%;
 }
 
@@ -93,6 +96,37 @@ body {
     background-color: #3498db;
     color: white;
     text-decoration: none;
+}
+
+/* Стили для текстового поля */
+input[type="text"][name="text_message"] {
+    padding: 5px 10px; /* отступ внутри поля */
+    border: 2px solid #3498db; /* цвет границы */
+    border-radius: 5px; /* скругление углов */
+    font-size: 16px; /* размер текста */
+    color: white;
+}
+
+/* Стили для кнопки отправки */
+input[type="submit"][value="Отправить"] {
+    padding: 10px 20px; /* отступ внутри кнопки */
+    border: none; /* убираем границу */
+    border-radius: 5px; /* скругление углов */
+    background-color: #3498db; /* цвет фона */
+    color: #fff; /* цвет текста */
+    font-size: 16px; /* размер текста */
+    cursor: pointer; /* указатель мыши */
+}
+
+/* Дополнительные стили для активной ссылки */
+input[type="text"][name="text_message"]:focus{
+    background-color: cornflowerblue;
+    color: white;
+}
+
+input[type="submit"][value="Отправить"]:hover {
+    background-color: #2980b9; /* изменяем цвет фона при наведении */
+    color: white;
 }
 
 /* Стили для динамически добавляемых диалогов */
