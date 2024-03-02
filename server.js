@@ -250,6 +250,25 @@ app.get('/profile', (req, res) => {
     }
 });
 
+app.get('/user_info', (req, res) => {
+    console.log(req.session.userId);
+    const query = {
+        text: `SELECT username, email, password_hash, registration_date, profile_info, user_password FROM users WHERE user_id = $1`,
+        values: [req.session.userId]
+    };
+
+    pool.query(query, (err, result) => {
+        if (err) {
+            res.status(500).send('Ошибка при выполнении запроса');
+            return;
+        }
+        const user = result.rows;
+        console.log(user);
+        // Отправляем данные в формате JSON обратно клиенту
+        res.json({ info: user });
+    });
+});
+
 app.post('/register', (req, res) => {
     const { username, email, password, profile_info } = req.body;
     const registration_date = new Date().toISOString();

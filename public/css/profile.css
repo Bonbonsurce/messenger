@@ -66,7 +66,8 @@ body {
 
 /* Стили для кнопок */
 .edit-button,
-.add-photo-button {
+.add-photo-button,
+.settings-button {
     margin-top: 10px;
     padding: 8px 16px;
     border: none;
@@ -77,7 +78,8 @@ body {
 }
 
 .edit-button:hover,
-.add-photo-button:hover {
+.add-photo-button:hover,
+.settings-button:hover {
     background-color: #2980b9;
 }
 
@@ -107,4 +109,23 @@ body {
 
 .photos-section ul li {
     margin-bottom: 10px;
+}
+
+.logo-div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 9em;
+    height: 10em;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.image-logo {
+    width: 9em;
+    height: 10em;
+    border: 2px solid #add8e6; /* Добавляем рамку нежно-голубого цвета */
+    border-radius: 10px; /* Добавляем скругление углов рамки */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Добавляем тень для эффекта поднятости */
 }
