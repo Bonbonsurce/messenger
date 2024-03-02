@@ -5,27 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Сообщения</title>
     <link rel="stylesheet" href="/css/news.css">
-
-    <script src="https://raw.githack.com/Bonbonsurce/messenger/main/public/scripts/message.js"></script>
-<!--    <style>
-        .dialog-div {
-            max-width: 800px;
-            margin: 20px auto;
-            padding: 30px;
-            background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            border: 2px solid #3498db; /* цвет границы */
-        }
-
-        .auth-link {
-            text-decoration: none;
-        }
-
-        .dialogs-main {
-            width: 70%;
-        }
-    </style>-->
+    <script src="/scripts/message.js"></script>
 </head>
 <body>
     <div class="container">
@@ -34,7 +14,8 @@
                 <li><a href="/profile">Мой профиль</a></li>
                 <li><a href="/news">Новости</a></li>
                 <li><a href="/message" class="active">Сообщения</a></li>
-                <li><a href="/files">Файлы</a></li>
+                <li><a href="/foto">Фотографии</a></li>
+                <li><a href="/music">Музыка</a></li>
             </ul>
         </div>
         <div class="dialogs-main">
@@ -51,26 +32,18 @@
             </div>
         </div>
         <div class="additional-form">
-            <!-- Дополнительная форма справа -->
-            <form id="additional-form">
-                <!-- Содержимое формы -->
+            <form id="additional-form" style="display: none">
+                <ul id="user-list">
+
+                </ul>
+                <button id="close-new-users" onclick="close_users()" class="btn-submit"> Закрыть </button>
             </form>
+            <button id="write_new_user" onclick="write_new()" class="btn-submit">Написать новому пользователю</button>
         </div>
     </div>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const userId = urlParams.get('user_id');
-
-            document.getElementById('sender_user_id').value = 6;
-
-            if (userId) {
-                // Если параметр user_id есть в адресной строке, показываем форму
-                document.getElementById('messageForm').style.display = 'block';
-                document.getElementById('receiver_id').value = userId;
-            }
-        });
-    </script>
+    <footer>
+        <p>&copy; 2024 Месенджер. Все права защищены.</p>
+    </footer>
 </body>
 
 </html>

@@ -44,7 +44,11 @@ body {
 }
 
 .dialogs-main {
-    width: 70%;
+    display: flex;
+    flex-direction: column; /* Располагаем дочерние элементы в столбец */
+    align-items: center; /* Выравниваем по центру по горизонтали */
+    justify-content: center; /* Выравниваем по центру по вертикали */
+    flex-grow: 1;
     height: auto;
 }
 
@@ -163,4 +167,62 @@ input[type="submit"][value="Отправить"]:hover {
 /* Стили для дополнительной формы */
 .additional-form {
     max-width: 15vw; /* Примерно 15% от ширины экрана */
+}
+
+.a-list {
+    display: block;
+    text-decoration: none;
+    color: #333;
+    padding: 5px 10px;
+    border-radius: 5px;
+    margin-bottom: 5px; /* Добавляем отступ снизу между ссылками */
+}
+
+.a-list :hover {
+    background-color: #f2f2f2; /* Изменяем цвет фона при наведении */
+    color: #555; /* Изменяем цвет текста при наведении */
+}
+
+#user-list {
+    padding: 0;
+    list-style: none;
+}
+
+#user-list li {
+    text-align: left; /* Выравниваем текст влево */
+    color: #2980b9;
+}
+
+.btn-submit {
+    padding: 10px 20px; /* отступ внутри кнопки */
+    border: none; /* убираем границу */
+    border-radius: 5px; /* скругление углов */
+    background-color: #2980b9; /* цвет фона */
+    color: white; /* цвет текста */
+    font-size: 16px; /* размер текста */
+    cursor: pointer; /* указатель мыши */
+    transition: background-color 0.3s ease; /* добавляем плавный переход цвета фона */
+}
+
+.btn-submit:hover {
+    background-color: #3498db; /* изменяем цвет фона при наведении */
+}
+#additional-form {
+    display: flex;
+    flex-direction: column; /* Располагаем дочерние элементы в столбец */
+    align-items: center; /* Выравниваем по центру по горизонтали */
+    justify-content: center; /* Выравниваем по центру по вертикали */
+    text-align: center; /* Выравниваем текст по центру */
+    padding: 10px;
+}
+
+footer {
+    background-color: #3498db; /* Нежный синий цвет */
+    color: #fff; /* Белый цвет текста */
+    text-align: center;
+    padding: 20px 0;
+}
+
+footer p {
+    margin: 0; /* Убираем отступы для абзаца */
 }

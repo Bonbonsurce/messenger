@@ -99,6 +99,23 @@ app.post('/login', (req, res) => {
     });
 });
 
+app.get('/write_new', (req, res) => {
+    const query = {
+        text: 'SELECT username, user_id FROM users WHERE user_id != $1',
+        values: [req.session.userId]
+    };
+
+    pool.query(query, (err, result) => {
+        if (err) {
+            res.status(500).send('Ошибка при выполнении запроса');
+            return;
+        }
+        const usernames = result.rows;
+        // Отправляем данные в формате JSON обратно клиенту
+        res.json({ message: usernames });
+    });
+});
+
 app.post('/send_message', (req, res) => {
     const receiverId = req.body.receiver_id;
     const senderId = req.body.sender_user_id;
