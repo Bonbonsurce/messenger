@@ -253,7 +253,7 @@ app.get('/profile', (req, res) => {
 app.get('/user_info', (req, res) => {
     console.log(req.session.userId);
     const query = {
-        text: `SELECT username, email, password_hash, registration_date, profile_info, user_password FROM users WHERE user_id = $1`,
+        text: `SELECT username, email, password_hash, registration_date, profile_info, user_password, logo_img FROM users WHERE user_id = $1`,
         values: [req.session.userId]
     };
 

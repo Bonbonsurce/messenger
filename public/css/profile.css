@@ -122,7 +122,7 @@ body {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.image-logo {
+#image-logo {
     width: 9em;
     height: 10em;
     border: 2px solid #add8e6; /* Добавляем рамку нежно-голубого цвета */
