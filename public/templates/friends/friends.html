@@ -4,24 +4,48 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Новости</title>
-    <link rel="stylesheet" href="/css/news.css">
+    <link rel="stylesheet" href="/css/friends.css">
+
 </head>
 <body>
-<div class="container">
-    <div class="navigation-panel">
-        <ul>
-            <li><a href="/profile">Мой профиль</a></li>
-            <li><a href="/news">Новости</a></li>
-            <li><a href="/friends" class="active">Друзья</a></li>
-            <li><a href="/message">Сообщения</a></li>
-            <li><a href="/foto">Фотографии</a></li>
-            <li><a href="/music">Музыка</a></li>
-        </ul>
-    </div>
+    <div class="container">
+        <div class="navigation-panel">
+            <ul>
+                <li><a href="/profile">Мой профиль</a></li>
+                <li><a href="/news">Новости</a></li>
+                <li><a href="/friends" class="active">Друзья</a></li>
+                <li><a href="/message">Сообщения</a></li>
+                <li><a href="/foto">Фотографии</a></li>
+                <li><a href="/music">Музыка</a></li>
+            </ul>
+        </div>
+        <div class="friend-list">
+            <select id="friend-select">
+                <option value="friend-block" selected>Друзья</option>
+                <option value="you-follow">Ваши подписки</option>
+                <option value="follow-to-you">Подписчики</option>
+            </select>
+            <div class="you-follow" id="follow">
+                <ul id="follow-list">
 
-</div>
-<footer>
-    <p>&copy; 2024 Месенджер. Все права защищены.</p>
-</footer>
+                </ul>
+            </div>
+            <div class="friend-block" id="friends">
+                <ul id="friend-list">
+
+                </ul>
+            </div>
+            <div class="follow-to-you" id="followers">
+                <ul id="follower-list">
+
+                </ul>
+            </div>
+        </div>
+    </div>
+    <footer>
+        <p>&copy; 2024 Месенджер. Все права защищены.</p>
+    </footer>
+
+    <script src="/scripts/friends.js"></script>
 </body>
 </html>

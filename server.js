@@ -46,6 +46,64 @@ app.get('/', (req, res) => {
     res.sendFile(filePath);
 });
 
+app.get('/friends', (req, res) => {
+    // Проверяем, аутентифицирован ли пользователь
+    if (req.session.authenticated) {
+        fs.readFile(__dirname + '/public/templates/friends/friends.html', 'utf8', (err, data) => {
+            // Заменяем значение session_user_id в HTML-файле на значение из сессии
+            const updatedData = data.replace(/<%= session_user_id %>/g, req.session.userId);
+
+            // Отправляем обновленный HTML-файл клиенту
+            res.send(updatedData);
+        })
+        //res.sendFile(__dirname + '/public/templates/messages/message.html', { session_user_id: req.session.userId });
+
+    } else {
+        // Если пользователь не аутентифицирован, перенаправляем его на страницу авторизации
+        res.redirect('/welcome');
+    }
+});
+
+app.get('/friends_info', async (req, res) => {
+    //follower_id - тот кто подписан
+    //following_id - тот на кого подписан
+    try {
+        // Выполнение запросов к базе данных
+        const query_follows = await pool.query({
+            text: `SELECT username, following_id
+                   FROM followers
+                   JOIN users ON followers.following_id = users.user_id
+                   WHERE followers.follower_id = $1`,
+            values: [req.session.userId]
+        });
+
+        const query_followers = await pool.query({
+            text: `SELECT username, follower_id
+                   FROM followers
+                   JOIN users ON followers.follower_id = users.user_id
+                   WHERE followers.following_id = $1`,
+            values: [req.session.userId]
+        });
+
+        const query_friends = await pool.query({
+            text: `SELECT username, user_id_2
+                   FROM friends
+                   JOIN users ON friends.user_id_2 = users.user_id
+                   WHERE friends.user_id_1 = $1`,
+            values: [req.session.userId]
+        });
+
+        // Отправка данных клиенту
+        res.json({
+            follows: query_follows.rows,
+            followers: query_followers.rows,
+            friends: query_friends.rows
+        });
+    } catch (error) {
+        console.error('Ошибка при выполнении запросов:', error);
+        res.status(500).json({ error: 'Ошибка при получении информации о друзьях' });
+    }
+});
 
 app.get('/welcome', (req, res) => {
     // Проверяем, аутентифицирован ли пользователь
@@ -164,7 +222,6 @@ app.get('/conversation', (req, res) => {
     req.session.userReceiver = idReceiver;
     const user_send = req.session.userId;
     const user_received = req.session.userReceiver;
-
 
     if (!user_send) {
         res.status(401).send('Пользователь не аутентифицирован');

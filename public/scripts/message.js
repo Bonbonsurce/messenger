@@ -67,7 +67,6 @@ document.addEventListener('DOMContentLoaded', async function() {
                 const textMessage = document.createElement('p');
                 textMessage.textContent = 'Отправил  ' +  message.username + ': ' + message.message_text;
                 dialogDiv.appendChild(textMessage);
-
             });
 
             dialogsSection.appendChild(dialogDiv);
