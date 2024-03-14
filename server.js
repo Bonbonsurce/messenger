@@ -8,6 +8,9 @@ const port = 3000;
 const bodyParser = require('body-parser');
 const session = require('express-session');
 
+//эта штука для адекватной обработки POST запросов с клиентской части
+app.use(bodyParser.json());
+
 app.use(session({
     secret: 'secret', // Секретный ключ для подписи куки с сессией
     resave: false,
@@ -196,8 +199,7 @@ app.post('/send_message', (req, res) => {
     const receiverId = req.body.receiver_id;
     const senderId = req.body.sender_user_id;
     const textMessage = req.body.text_message;
-    console.log(senderId);
-    console.log(receiverId);
+
     const insertQuery = `
         INSERT INTO public.messages(message_text, post_time, sender_id, receiver_id)
         VALUES ($1, NOW(), $2, $3)
@@ -326,21 +328,99 @@ app.get('/profile', (req, res) => {
 });
 
 app.get('/user_info', (req, res) => {
-    console.log(req.session.userId);
+    const userId = req.query.user_id;
+    if (userId == -1) {
+        const query = {
+            text: `SELECT username, email, password_hash, registration_date, profile_info, user_password, logo_img FROM users WHERE user_id = $1`,
+            values: [req.session.userId]
+        };
+
+        pool.query(query, (err, result) => {
+            if (err) {
+                res.status(500).send('Ошибка при выполнении запроса');
+                return;
+            }
+            const user = result.rows;
+            console.log(user);
+            // Отправляем данные в формате JSON обратно клиенту
+            res.json({ info: user });
+        });
+    } else {
+        const query = {
+            text: `SELECT username, email, password_hash, registration_date, profile_info, user_password, logo_img FROM users WHERE user_id = $1`,
+            values: [userId]
+        };
+
+        pool.query(query, (err, result) => {
+            if (err) {
+                res.status(500).send('Ошибка при выполнении запроса');
+                return;
+            }
+            const user = result.rows;
+            console.log(user);
+            // Отправляем данные в формате JSON обратно клиенту
+            res.json({ info: user });
+        });
+    }
+});
+
+app.get('/check_friendship', (req, res) => {
+    const userId = req.query.user_id;
+    const myUserId = req.session.userId;
+
     const query = {
-        text: `SELECT username, email, password_hash, registration_date, profile_info, user_password, logo_img FROM users WHERE user_id = $1`,
-        values: [req.session.userId]
+        text: `SELECT DISTINCT user_id_1, user_id_2 FROM friends WHERE (user_id_1 = $1 AND user_id_2 = $2) OR (user_id_1 = $2 AND user_id_2 = $1)`,
+        values: [myUserId, userId]
     };
 
     pool.query(query, (err, result) => {
         if (err) {
-            res.status(500).send('Ошибка при выполнении запроса');
+            res.status(500).json({ error: 'Ошибка при выполнении запроса' });
             return;
         }
-        const user = result.rows;
-        console.log(user);
-        // Отправляем данные в формате JSON обратно клиенту
-        res.json({ info: user });
+
+        if (result.rows.length > 0) {
+            res.json({ friendshipStatus: 'friend' });
+        } else {
+            res.json({ friendshipStatus: 'not_friend' });
+        }
+    });
+});
+
+
+app.post('/remove_friend', (req, res) => {
+    const friendId = req.body.friendId;
+
+    const query = {
+        text: 'DELETE FROM friends WHERE (user_id_1 = $1 AND user_id_2 = $2) OR (user_id_2 = $1 AND user_id_1 = $2)',
+        values: [req.session.userId, friendId]
+    };
+
+    pool.query(query, (err, result) => {
+        if (err) {
+            console.error('Ошибка при выполнении запроса:', err); // Логируйте ошибку, если она возникла
+            res.status(500).json({ error: 'Ошибка при удалении друга' });
+            return;
+        }
+        res.redirect('/friends');
+    });
+});
+
+app.post('/add_friend', (req, res) => {
+    const friendIdDel = req.body.friendId;
+    console.log('Friend ID:', friendIdDel);
+    const query = {
+        text: 'INSERT INTO friends (user_id_1, user_id_2) VALUES ($1, $2)',
+        values: [req.session.userId, friendIdDel]
+    };
+
+    pool.query(query, (err, result) => {
+        if (err) {
+            res.status(500).json({ error: 'Ошибка при добавлении друга' });
+            return;
+        }
+        console.log("heeey");
+        res.redirect('/friends');
     });
 });
 
@@ -357,7 +437,7 @@ app.post('/register', (req, res) => {
         if (err) {
             res.status(500).send('Ошибка при регистрации пользователя');
         } else {
-            res.status(200).send('Пользователь успешно зарегистрирован');
+            res.redirect('/welcome');
         }
     });
 });
