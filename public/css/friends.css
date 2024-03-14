@@ -74,7 +74,7 @@ footer p {
     padding: 8px 12px; /* Отступы внутри списка */
     border: 1px solid #ccc; /* Граница */
     border-radius: 5px; /* Скругленные углы */
-    background-color: #f2f6fc; /* Фоновый цвет */
+    background-color: #3498db; /* Фоновый цвет */
     color: #333; /* Цвет текста */
     font-size: 16px; /* Размер шрифта */
 }
@@ -94,5 +94,21 @@ footer p {
 /* При выборе опции */
 #friend-select option:checked {
     background-color: #c7d8f3; /* Фоновый цвет при выборе */
+}
+
+.a-list {
+    display: block;
+    text-decoration: none;
+    color: #333;
+    padding: 5px 10px;
+    border-radius: 5px;
+    margin-bottom: 5px; /* Добавляем отступ снизу между ссылками */
+    border: solid 1px blue;
+}
+
+.a-list :hover {
+    background-color: #f2f2f2; /* Изменяем цвет фона при наведении */
+    color: #555; /* Изменяем цвет текста при наведении */
+    border: solid 1px #2980b9;
 }
 

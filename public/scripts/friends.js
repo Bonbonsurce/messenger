@@ -119,3 +119,30 @@ document.addEventListener('DOMContentLoaded', async function() {
         console.error('Ошибка при получении информации о друзьях:', error);
     }
 });
+
+document.addEventListener('DOMContentLoaded', function () {
+    const searchForm = document.querySelector('.search form');
+    const findFriendsDiv = document.getElementById('find-friends');
+
+    searchForm.addEventListener('submit', async function (event) {
+        event.preventDefault();
+
+        const formData = new FormData(searchForm);
+        const searchKeyword = formData.get('search_keyword');
+
+        try {
+            const response = await fetch(`/search_friend?search_keyword=${searchKeyword}`);
+            const data = await response.json();
+
+            if (data.find_friend.length > 0) {
+                const friendList = data.find_friend.map(friend => `<li><a class="a-list" href="/profile?user_id=${friend.user_id}">${friend.username}</a></li>`).join('');
+                findFriendsDiv.innerHTML = `<ul>${friendList}</ul>`;
+            } else {
+                findFriendsDiv.innerHTML = `<p>Ничего не найдено</p>`;
+            }
+        } catch (error) {
+            console.error('Ошибка при получении данных:', error);
+            findFriendsDiv.innerHTML = `<p>Ошибка при получении данных</p>`;
+        }
+    });
+});

@@ -105,6 +105,24 @@ app.get('/friends_info', async (req, res) => {
     }
 });
 
+app.get('/search_friend', async (req, res) => {
+    try {
+        const search_name = req.query.search_keyword;
+        // Запрос к базе данных
+        const find_friends = await pool.query({
+            text: 'SELECT username, user_id FROM users WHERE username ILIKE $1',
+            values: [`%${search_name}%`],
+        });
+
+        res.json({
+            find_friend: find_friends.rows
+        });
+    } catch (error) {
+        console.error('Ошибка при выполнении запросов:', error);
+        res.status(500).json({ error: 'Ошибка при получении информации о друзьях' });
+    }
+});
+
 app.get('/welcome', (req, res) => {
     // Проверяем, аутентифицирован ли пользователь
     if (req.session.authenticated) {
