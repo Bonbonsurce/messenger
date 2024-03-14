@@ -109,12 +109,14 @@ app.get('/friends_info', async (req, res) => {
 });
 
 app.get('/search_friend', async (req, res) => {
+    const currentUserId = req.session.userId;
+    console.log(currentUserId);
     try {
         const search_name = req.query.search_keyword;
         // Запрос к базе данных
         const find_friends = await pool.query({
-            text: 'SELECT username, user_id FROM users WHERE username ILIKE $1',
-            values: [`%${search_name}%`],
+            text: 'SELECT username, user_id FROM users WHERE username ILIKE $1 AND user_id != $2',
+            values: [`%${search_name}%`, currentUserId],
         });
 
         res.json({
