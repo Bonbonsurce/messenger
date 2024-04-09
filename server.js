@@ -8,6 +8,27 @@ const port = 3000;
 const bodyParser = require('body-parser');
 const session = require('express-session');
 
+//для файловой системы
+const multer = require('multer');
+const path = require('path');
+// Папка для загрузки изображений
+const uploadDirectory = path.join(__dirname, 'public', 'pics');
+
+// Создание хранилища multer
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, uploadDirectory);
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+    }
+});
+
+// Создание объекта multer
+const upload = multer({ storage: storage });
+
+
 //эта штука для адекватной обработки POST запросов с клиентской части
 app.use(bodyParser.json());
 
@@ -66,6 +87,33 @@ app.get('/friends', (req, res) => {
         res.redirect('/welcome');
     }
 });
+
+app.get('/upload_form', (req, res) => {
+    const filePath = __dirname + '/public/templates/profile/upload_foto.html';
+    res.sendFile(filePath);
+});
+
+app.post('/upload_pic', upload.single('image'), (req, res) => {
+    res.json({ message: 'Изображение успешно загружено' });
+});
+
+app.get('/foto', (req, res) => {
+    // Проверяем, аутентифицирован ли пользователь
+    if (req.session.authenticated) {
+        fs.readFile(__dirname + '/public/templates/foto/foto.html', 'utf8', (err, data) => {
+            // Заменяем значение session_user_id в HTML-файле на значение из сессии
+            const updatedData = data.replace(/<%= session_user_id %>/g, req.session.userId);
+
+            // Отправляем обновленный HTML-файл клиенту
+            res.send(updatedData);
+        })
+
+    } else {
+        // Если пользователь не аутентифицирован, перенаправляем его на страницу авторизации
+        res.redirect('/welcome');
+    }
+});
+
 
 app.get('/friends_info', async (req, res) => {
     //follower_id - тот кто подписан
@@ -421,7 +469,6 @@ app.post('/add_friend', (req, res) => {
             res.status(500).json({ error: 'Ошибка при добавлении друга' });
             return;
         }
-        console.log("heeey");
         res.redirect('/friends');
     });
 });
