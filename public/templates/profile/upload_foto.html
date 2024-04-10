@@ -4,31 +4,125 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Загрузка изображения</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff; /* Нежно-голубой цвет фона */
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff; /* Белый цвет фона контейнера */
+            border-radius: 10px; /* Закругление углов контейнера */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Тень контейнера */
+        }
+
+        h1 {
+            color: #333; /* Цвет заголовка */
+        }
+
+        .upload-btn-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .upload-btn-wrapper input[type="file"] {
+            font-size: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+        }
+
+        .upload-btn-wrapper button {
+            padding: 10px 20px;
+            background-color: #5bc0de; /* Цвет кнопки */
+            color: #fff; /* Цвет текста на кнопке */
+            border: none;
+            border-radius: 5px; /* Закругление углов кнопки */
+            cursor: pointer;
+            transition: background-color 0.3s; /* Плавное изменение цвета фона при наведении */
+        }
+
+        .upload-btn-wrapper button:hover {
+            background-color: #31b0d5; /* Изменение цвета фона кнопки при наведении */
+        }
+        input[type="file"] {
+            padding: 10px; /* Отступы вокруг элемента */
+            align-items: center;
+            width: 400px;
+            border: 2px solid #5bc0de; /* Бордюр элемента */
+            border-radius: 5px; /* Закругление углов */
+            background-color: #fff; /* Цвет фона */
+            color: #5bc0de; /* Цвет текста */
+            font-size: 16px; /* Размер шрифта */
+            cursor: pointer; /* Курсор при наведении */
+            margin-left: 40px;
+            transition: border-color 0.3s, background-color 0.3s; /* Плавные переходы цвета бордюра и фона */
+        }
+
+        input[type="file"]:hover {
+            border-color: #31b0d5; /* Изменение цвета бордюра при наведении */
+        }
+
+        input[type="file"]::-webkit-file-upload-button {
+            visibility: hidden; /* Скрываем стандартную кнопку загрузки для Chrome и Safari */
+        }
+
+        button[type="submit"] {
+            padding: 10px 20px;
+            background-color: #5bc0de; /* Цвет кнопки */
+            color: #fff; /* Цвет текста на кнопке */
+            border: none;
+            border-radius: 5px; /* Закругление углов кнопки */
+            cursor: pointer;
+            transition: background-color 0.3s; /* Плавное изменение цвета фона при наведении */
+        }
+
+        button[type="submit"]:hover {
+            background-color: #31b0d5; /* Изменение цвета фона кнопки при наведении */
+        }
+    </style>
 </head>
 <body>
-<h1>Загрузка изображения</h1>
-<form id="uploadForm" enctype="multipart/form-data">
-    <input type="file" name="image" accept="image/*">
-    <button type="submit">Загрузить изображение</button>
-</form>
+    <h1>Загрузка изображения</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" name="image" accept="image/*" onchange="enableUploadButton()">
+        <button type="submit" id="uploadButton" disabled>Загрузить изображение</button>
+    </form>
 
-<script>
-    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const formData = new FormData();
-        formData.append('image', e.target.elements.image.files[0]);
-
-        try {
-            const response = await fetch('/upload_pic', {
-                method: 'POST',
-                body: formData
-            });
-            const result = await response.json();
-            alert(result.message);
-        } catch (error) {
-            console.error('Error:', error);
+    <script>
+        function enableUploadButton() {
+            document.getElementById('uploadButton').removeAttribute('disabled');
         }
-    });
-</script>
+
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData();
+            formData.append('image', e.target.elements.image.files[0]);
+
+            try {
+                const response = await fetch('/upload_pic', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    // Если ответ от сервера успешный (код ответа 200-299),
+                    // вы можете сделать что-то здесь, например, перенаправить пользователя на другую страницу
+                    window.location.href = '/profile';
+                } else {
+                    console.error('Ошибка при загрузке изображения:', response.statusText);
+                }
+            } catch (error) {
+                console.error('Ошибка при загрузке изображения:', error);
+            }
+        });
+    </script>
 </body>
 </html>

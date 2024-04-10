@@ -3,6 +3,7 @@ const express = require('express');
 const app = express();
 const { Pool } = require('pg');
 const fs = require('fs');
+const { v4: uuidv4 } = require('uuid'); //для уникального имени аватарки с session.userId
 const hostname = '127.0.0.1';
 const port = 3000;
 const bodyParser = require('body-parser');
@@ -20,8 +21,10 @@ const storage = multer.diskStorage({
         cb(null, uploadDirectory);
     },
     filename: function (req, file, cb) {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+        //const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        //cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+        const uniqueFileName = `${req.session.userID}-${uuidv4()}${file.originalname.substring(file.originalname.lastIndexOf('.'))}`;
+        cb(null, uniqueFileName);
     }
 });
 
@@ -93,8 +96,42 @@ app.get('/upload_form', (req, res) => {
     res.sendFile(filePath);
 });
 
-app.post('/upload_pic', upload.single('image'), (req, res) => {
-    res.json({ message: 'Изображение успешно загружено' });
+app.post('/upload_pic', upload.single('image'), async (req, res) => {
+    try {
+        // Получаем путь к загруженному изображению
+        const imagePath = '/pics/' + req.file.filename; // Предполагается, что папка /pics/ уже существует
+        console.log(imagePath);
+
+        // Получаем предыдущий путь к фото пользователя из базы данных
+        const queryText = 'SELECT logo_img FROM users WHERE user_id = $1';
+        const { rows } = await pool.query(queryText, [req.session.userId]);
+        const prevImagePath = rows[0] ? rows[0].logo_img.replace('\\', '\\\\') : null;
+        const fullImagePath = path.join(__dirname, 'public', prevImagePath);
+
+        console.log(fullImagePath);
+
+        // Обновляем поле user_logo в таблице users для текущего пользователя
+        const updateQuery = 'UPDATE users SET logo_img = $1 WHERE user_id = $2';
+        const values = [imagePath, req.session.userId];
+        await pool.query(updateQuery, values);
+
+        // Удаляем предыдущее фото из файловой системы
+        if (fullImagePath) {
+            fs.unlink(fullImagePath, (err) => {
+                if (err) {
+                    console.error('Ошибка при удалении предыдущего изображения:', err);
+                } else {
+                    console.log('Предыдущее изображение успешно удалено');
+                }
+            });
+        }
+
+        //res.json({message: 'Изображение успешно загружено'});
+        res.redirect('/profile');
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({message: 'Произошла ошибка при загрузке изображения'});
+    }
 });
 
 app.get('/foto', (req, res) => {
