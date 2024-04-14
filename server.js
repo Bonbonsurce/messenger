@@ -125,8 +125,6 @@ app.post('/upload_pic', upload.single('image'), async (req, res) => {
                 }
             });
         }
-
-        //res.json({message: 'Изображение успешно загружено'});
         res.redirect('/profile');
     } catch (error) {
         console.error('Error:', error);
