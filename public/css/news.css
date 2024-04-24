@@ -91,6 +91,9 @@ body {
     border-radius: 10px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     border: 2px solid #3498db; /* цвет границы */
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
 }
 
 .auth-link {
@@ -171,6 +174,22 @@ input[type="submit"][value="Отправить"]:hover {
 
 .red-background {
     background-color: red !important;
+}
+
+.delete-button {
+    width: 20px; /* Ширина кнопки */
+    height: 20px; /* Высота кнопки */
+    background-color: #ff4d4d; /* Красный цвет кнопки */
+    color: #fff; /* Белый цвет текста крестика */
+    font-size: 14px; /* Размер текста крестика */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer; /* Курсор при наведении */
+}
+
+.delete-button:hover {
+    background-color: #ff6666; /* Цвет кнопки при наведении */
 }
 
 .a-list {

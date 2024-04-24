@@ -471,6 +471,90 @@ app.get('/conversation', (req, res) => {
     });
 });
 
+app.post('/delete_dialog', (req, res) => {
+    const reciver_id = req.query.user_id;
+
+    const query = {
+        text: `
+        DELETE FROM public.messages
+        WHERE (sender_id = $1 AND receiver_id = $2)
+            OR (sender_id = $2 AND receiver_id = $1);
+        `, values: [reciver_id, req.session.userId],
+    };
+
+    pool.query(query, (err, result) => {
+        if (err) {
+            res.status(500).send('Ошибка при выполнении запроса');
+            return;
+        }
+        res.redirect('/message');
+    });
+});
+
+app.post('/delete_chat_member', (req, res) => {
+    const chat_id = req.query.chat_id;
+    const user_id = req.session.userId;
+
+    // Шаг 1: Удалить пользователя из списка участников чата
+    const deleteQuery = {
+        text: `
+            UPDATE public.chats
+            SET members_id = REPLACE(members_id, $1, '')
+            WHERE chat_id = $2;
+        `,
+        values: [user_id, chat_id]
+    };
+
+    // Шаг 2: Проверить, остались ли еще участники в чате
+    const checkQuery = {
+        text: `
+            SELECT COUNT(*) AS num_members
+            FROM public.chats
+            WHERE chat_id = $1
+            AND members_id != '';
+        `,
+        values: [chat_id]
+    };
+
+    pool.query(deleteQuery, (err, result) => {
+        if (err) {
+            res.status(500).send('Ошибка при удалении пользователя из чата');
+            return;
+        }
+
+        pool.query(checkQuery, (checkErr, checkResult) => {
+            if (checkErr) {
+                res.status(500).send('Ошибка при проверке оставшихся участников чата');
+                return;
+            }
+
+            const num_members = checkResult.rows[0].num_members;
+
+            // Если в чате больше нет участников, удалить весь чат
+            if (num_members === 0) {
+                const deleteChatQuery = {
+                    text: `
+                        DELETE FROM public.chats
+                        WHERE chat_id = $1;
+                    `,
+                    values: [chat_id]
+                };
+
+                pool.query(deleteChatQuery, (deleteChatErr, deleteChatResult) => {
+                    if (deleteChatErr) {
+                        res.status(500).send('Ошибка при удалении чата');
+                        return;
+                    }
+
+                    res.send('Пользователь удален из чата, чат удален');
+                });
+            } else {
+                res.send('Пользователь удален из чата');
+            }
+        });
+    });
+});
+
 app.get('/chat_conversation', (req, res) => {
     const chat_Id = req.query.chatId;
     console.log(chat_Id);

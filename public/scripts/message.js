@@ -39,6 +39,20 @@ document.addEventListener('DOMContentLoaded', async function() {
                 usernameLink.classList.add('auth-link');
                 usernameLink.href = `/message?user_id=${user.user_id}`;
                 dialogDiv.appendChild(usernameLink);
+
+                // Создаем блок с кнопкой удаления диалога
+                const deleteButton = document.createElement('div');
+                deleteButton.classList.add('delete-button');
+                deleteButton.textContent = '❌'; // Вставляем крестик
+
+                // Назначаем обработчик события для кнопки удаления диалога
+                deleteButton.addEventListener('click', () => {
+                    delete_dialog(user.user_id); // Вызываем функцию delete_dialog с user_id
+                });
+
+                // Добавляем кнопку удаления в блок диалога
+                dialogDiv.appendChild(deleteButton);
+
                 dialogsSection.appendChild(dialogDiv);
             });
             chats.forEach(chat => {
@@ -50,6 +64,20 @@ document.addEventListener('DOMContentLoaded', async function() {
                 chatnameLink.classList.add('auth-link');
                 chatnameLink.href = `/message?chat_id=${chat.chat_id}`;
                 dialogDiv.appendChild(chatnameLink);
+
+                // Создаем блок с кнопкой удаления диалога
+                const deleteButton = document.createElement('div');
+                deleteButton.classList.add('delete-button');
+                deleteButton.textContent = '❌'; // Вставляем крестик
+
+                // Назначаем обработчик события для кнопки удаления диалога
+                deleteButton.addEventListener('click', () => {
+                    delete_chat(chat.chat_id);
+                });
+
+                // Добавляем кнопку удаления в блок диалога
+                dialogDiv.appendChild(deleteButton);
+
                 dialogsSection.appendChild(dialogDiv);
             });
         } catch (error) {
@@ -293,5 +321,39 @@ function create_chat(){
         close_group();
     } catch (error) {
         console.error('Ошибка при создании группового чата:', error);
+    }
+}
+
+async function delete_dialog(user_id) {
+    try {
+        const response = await fetch(`/delete_dialog?user_id=${user_id}`, {
+            method: 'POST' // Укажите метод запроса как POST
+        });
+
+        if (!response.ok) {
+            throw new Error('Ошибка при удалении диалога');
+        }
+
+        // Перенаправьте пользователя на страницу сообщений после успешного удаления
+        window.location.href = '/message';
+    } catch (error) {
+        console.error('Ошибка при удалении диалога: ', error);
+    }
+}
+
+async function delete_chat(chat_id){
+    try {
+        const response = await fetch(`/delete_chat_member?chat_id=${chat_id}`, {
+            method: 'POST' // Укажите метод запроса как POST
+        });
+
+        if (!response.ok) {
+            throw new Error('Ошибка при удалении диалога');
+        }
+
+        // Перенаправьте пользователя на страницу сообщений после успешного удаления
+        window.location.href = '/message';
+    } catch (error) {
+        console.log('Ошибка при удалении чата: ', error);
     }
 }
