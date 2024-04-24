@@ -7,7 +7,10 @@ const { v4: uuidv4 } = require('uuid'); //для уникального имен
 const hostname = '127.0.0.1';
 const port = 3000;
 const bodyParser = require('body-parser');
+require('dotenv').config();
+
 const session = require('express-session');
+const csrf = require('csurf');
 
 //для файловой системы
 const multer = require('multer');
@@ -44,26 +47,84 @@ app.use(session({
 
 app.use(express.static(__dirname + '/public'));
 
+// Middleware для CSRF токенов
+// const csrfProtection = csrf({ cookie: true });
+//
+// // Применение CSRF токенов ко всем маршрутам
+// app.use(csrfProtection);
+
 const options = {
     key: fs.readFileSync('server.key'),
     cert: fs.readFileSync('server.cert')
 };
 
+// const pool = new Pool({
+//     user: 'postgres',
+//     host: 'localhost',
+//     database: 'messenger',
+//     password: 'com4ohCe',
+//     port: 5432
+// });
 const pool = new Pool({
-    user: 'postgres',
-    host: 'localhost',
-    database: 'messenger',
-    password: 'com4ohCe',
+    user: process.env.DB_USER,
+    host: process.env.DB_HOST,
+    database: process.env.DB_NAME,
+    password: process.env.DB_PASSWORD,
     port: 5432
 });
 
-pool.on('connect', () => {
+/*pool.on('connect', () => {
     console.log('Подключение к базе данных успешно!');
+});*/
+pool.connect((err, client, done) => {
+    if (err) throw err;
+    console.log('Connected to PostgreSQL database');
+
+    // Проверка наличия таблицы для хранения сессий
+    const checkSessionTableQuery = `
+        SELECT EXISTS (
+            SELECT 1
+            FROM information_schema.tables
+            WHERE table_name = 'sessions'
+        );
+    `;
+    client.query(checkSessionTableQuery, (err, result) => {
+        if (err) {
+            console.error('Error checking session table existence:', err);
+            done();
+            return;
+        }
+
+        const sessionTableExists = result.rows[0].exists;
+        if (!sessionTableExists) {
+            // Создание таблицы для хранения сессий (если отсутствует)
+            const createSessionTableQuery = `
+        CREATE TABLE sessions (
+          sid VARCHAR NOT NULL PRIMARY KEY,
+          sess JSON NOT NULL,
+          expire TIMESTAMP(6) NOT NULL
+        );
+      `;
+            client.query(createSessionTableQuery, (err, result) => {
+                done();
+                if (err) {
+                    console.error('Error creating session table:', err);
+                } else {
+                    console.log('Session table created successfully');
+                }
+            });
+        } else {
+            console.log('Session table already exists');
+            done();
+        }
+    });
 });
 
+/*
 pool.on('error', (err) => {
     console.error('Ошибка подключения к базе данных:', err);
 });
+*/
 
 app.use(bodyParser.urlencoded({ extended: true }));
 //const newsRoute = require('./routes/rout_news');
@@ -151,39 +212,37 @@ app.get('/foto', (req, res) => {
 
 
 app.get('/friends_info', async (req, res) => {
-    //follower_id - тот кто подписан
-    //following_id - тот на кого подписан
     try {
-        // Выполнение запросов к базе данных
-        const query_follows = await pool.query({
-            text: `SELECT username, following_id
-                   FROM followers
-                   JOIN users ON followers.following_id = users.user_id
-                   WHERE followers.follower_id = $1`,
-            values: [req.session.userId]
-        });
-
-        const query_followers = await pool.query({
-            text: `SELECT username, follower_id
-                   FROM followers
-                   JOIN users ON followers.follower_id = users.user_id
-                   WHERE followers.following_id = $1`,
-            values: [req.session.userId]
-        });
-
-        const query_friends = await pool.query({
-            text: `SELECT username, user_id_2
-                   FROM friends
-                   JOIN users ON friends.user_id_2 = users.user_id
-                   WHERE friends.user_id_1 = $1`,
-            values: [req.session.userId]
-        });
+        // Пакетный запрос к базе данных
+        const [followsQuery, followersQuery, friendsQuery] = await Promise.all([
+            pool.query({
+                text: `SELECT username, following_id
+                       FROM followers
+                       JOIN users ON followers.following_id = users.user_id
+                       WHERE followers.follower_id = $1`,
+                values: [req.session.userId]
+            }),
+            pool.query({
+                text: `SELECT username, follower_id
+                       FROM followers
+                       JOIN users ON followers.follower_id = users.user_id
+                       WHERE followers.following_id = $1`,
+                values: [req.session.userId]
+            }),
+            pool.query({
+                text: `SELECT username, user_id_2
+                       FROM friends
+                       JOIN users ON friends.user_id_2 = users.user_id
+                       WHERE friends.user_id_1 = $1`,
+                values: [req.session.userId]
+            })
+        ]);
 
         // Отправка данных клиенту
         res.json({
-            follows: query_follows.rows,
-            followers: query_followers.rows,
-            friends: query_friends.rows
+            follows: followsQuery.rows,
+            followers: followersQuery.rows,
+            friends: friendsQuery.rows
         });
     } catch (error) {
         console.error('Ошибка при выполнении запросов:', error);
@@ -191,9 +250,15 @@ app.get('/friends_info', async (req, res) => {
     }
 });
 
+// Функция обработки ошибок
+const handleErrors = (res, error, status = 500) => {
+    console.error('Ошибка:', error);
+    res.status(status).json({ error: 'Произошла ошибка' });
+};
+
 app.get('/search_friend', async (req, res) => {
     const currentUserId = req.session.userId;
-    console.log(currentUserId);
+
     try {
         const search_name = req.query.search_keyword;
         // Запрос к базе данных
@@ -206,8 +271,7 @@ app.get('/search_friend', async (req, res) => {
             find_friend: find_friends.rows
         });
     } catch (error) {
-        console.error('Ошибка при выполнении запросов:', error);
-        res.status(500).json({ error: 'Ошибка при получении информации о друзьях' });
+        handleErrors(res, error);
     }
 });
 
@@ -299,10 +363,62 @@ app.post('/send_message', (req, res) => {
         } else {
             console.log('Данные успешно вставлены в базу данных');
             res.redirect(`/message?user_id=${receiverId}`);
-            //res.status(200).send('Данные успешно вставлены в базу данных');
         }
     });
 
+});
+
+app.post('/send_message_chat', (req, res) => {
+    const chat_id = req.body.chat_id;
+    const sender_id = req.body.sender_id;
+    const textMessage = req.body.text_message;
+
+    const insertQuery = `
+        INSERT INTO public.chat_messages(message_text, send_time, user_id, chat_id)
+        VALUES ($1, NOW(), $2, $3)
+    `;
+    const values = [textMessage, sender_id, chat_id];
+
+    pool.query(insertQuery, values, (error, results) => {
+        if (error) {
+            console.error('Ошибка выполнения запроса:', error);
+            res.status(500).send('Произошла ошибка при выполнении запроса');
+        } else {
+            console.log('Данные успешно вставлены в базу данных');
+            res.redirect(`/message?chat_id=${chat_id}`);
+        }
+    });
+});
+
+app.post('/create_chat', (req, res) => {
+    try {
+        const { chatName, participants } = req.body;
+
+        const creator_id = req.session.userId;
+        participants.push(creator_id);
+        const participantsText = participants.join(', ');
+
+        const query = `
+            INSERT INTO chats(chat_name, creator_id, creation_date, members_id)
+            VALUES ($1, $2, NOW(), $3)
+        `;
+
+        const values = [chatName, creator_id, participantsText];
+
+        pool.query(query, values, (error, results) => {
+            if (error) {
+                console.error('Ошибка выполнения запроса:', error);
+                res.status(500).send('Произошла ошибка при выполнении запроса');
+            } else {
+                console.log('Данные успешно вставлены в базу данных');
+                res.redirect('/message');
+            }
+        });
+    } catch (error) {
+        console.error('Ошибка при создании чата:', error);
+        // Отправляем ответ с ошибкой клиенту
+        res.status(500).json({ error: 'Ошибка при создании чата' });
+    }
 });
 
 app.get('/news', (req, res) => {
@@ -355,6 +471,38 @@ app.get('/conversation', (req, res) => {
     });
 });
 
+app.get('/chat_conversation', (req, res) => {
+    const chat_Id = req.query.chatId;
+    console.log(chat_Id);
+    if (!req.session.userId) {
+        res.status(401).send('Пользователь не аутентифицирован');
+        return;
+    }
+    const query = {
+        text: `
+            SELECT cm.chat_id, cm.message_text, cm.send_time, cm.user_id,
+                   c.chat_name, c.creator_id, c.creation_date, c.members_id,
+                   u.username
+            FROM chat_messages cm
+                     JOIN chats c ON cm.chat_id = c.chat_id
+                     JOIN users u ON cm.user_id = u.user_id
+            WHERE c.chat_id = $1;
+      `,
+        values: [chat_Id],
+    };
+
+    pool.query(query, (err, result) => {
+        if (err) {
+            res.status(500).send('Ошибка при выполнении запроса');
+            return;
+        }
+        const chat_messages = result.rows;
+        console.log(chat_messages);
+        // Отправляем данные в формате JSON обратно клиенту
+        res.json({ chat_messages: chat_messages });
+    });
+});
+
 app.get('/all_mes_show', (req, res) => {
     const userId = req.session.userId;
     if (!userId) {
@@ -371,16 +519,30 @@ app.get('/all_mes_show', (req, res) => {
         values: [userId],
     };
 
-    pool.query(query, (err, result) => {
-        if (err) {
-            res.status(500).send('Ошибка при выполнении запроса');
-            return;
-        }
-        const receiverUsers = result.rows;
+    const query2 = {
+        text: `
+            SELECT DISTINCT chat_name, chat_id
+            FROM chats
+            WHERE members_id ILIKE $1;
+        `,
+        values: ['%' + userId + '%'],
+    };
 
-        // Отправляем данные в формате JSON обратно клиенту
-        res.json({ users: receiverUsers });
-    });
+    Promise.all([
+        pool.query(query),
+        pool.query(query2)
+    ])
+        .then(results => {
+            const receiverUsers = results[0].rows;
+            const chatNames = results[1].rows;
+
+            // Отправляем данные в формате JSON обратно клиенту
+            res.json({ users: receiverUsers, chats: chatNames });
+        })
+        .catch(error => {
+            console.error('Ошибка при выполнении запросов:', error);
+            res.status(500).send('Ошибка при выполнении запроса');
+        });
 });
 
 app.get('/message', (req, res) => {

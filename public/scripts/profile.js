@@ -2,6 +2,134 @@ document.addEventListener('DOMContentLoaded', async function () {
     const urlParams = new URLSearchParams(window.location.search);
     const userId = urlParams.get('user_id');
 
+    try {
+        if (!userId) {
+            // Если отсутствует идентификатор пользователя, отправляем запрос на получение данных по умолчанию
+            const response = await fetch(`/user_info?user_id=${-1}`);
+            const data = await response.json();
+
+            if (data.error) {
+                console.error('Ошибка при выполнении запроса:', data.error);
+                return;
+            }
+
+            const userInfo = data.info;
+
+            // Отображение информации о пользователе
+            displayUserInfo(userInfo);
+        } else {
+            // Если есть идентификатор пользователя, запрашиваем данные о пользователе и его статусе дружбы
+            const [userData, friendData] = await Promise.all([
+                fetchUserInfo(userId),
+                fetchFriendshipStatus(userId)
+            ]);
+
+            const userInfo = userData.info;
+            const friendStatus = friendData.friendshipStatus;
+
+            // Отображение информации о пользователе
+            displayUserInfo(userInfo);
+
+            // Создание кнопки в зависимости от статуса дружбы
+            createFriendshipButton(userId, friendStatus);
+        }
+    } catch (error) {
+        console.error('Ошибка при выполнении запроса:', error);
+    }
+});
+
+// Функция для получения информации о пользователе
+async function fetchUserInfo(userId) {
+    const response = await fetch(`/user_info?user_id=${userId}`);
+    const data = await response.json();
+
+    if (data.error) {
+        throw new Error(data.error);
+    }
+
+    return data;
+}
+
+// Функция для получения статуса дружбы с пользователем
+async function fetchFriendshipStatus(userId) {
+    const response = await fetch(`/check_friendship?user_id=${userId}`);
+    const data = await response.json();
+
+    if (data.error) {
+        throw new Error(data.error);
+    }
+
+    return data;
+}
+
+// Функция для отображения информации о пользователе
+function displayUserInfo(userInfo) {
+    const userNameElement = document.getElementById('user-name');
+    const userEmailElement = document.getElementById('user-email');
+    const userDateElement = document.getElementById('user-date');
+    const userLogo = document.getElementById('image-logo');
+
+    if (userInfo) {
+        userNameElement.textContent = `Имя пользователя: ${userInfo[0].username || "Не указано"}`;
+        userEmailElement.textContent = `Электронная почта пользователя: ${userInfo[0].email || "Не указано"}`;
+        userDateElement.textContent = `Дата регистрации: ${userInfo[0].registration_date ? userInfo[0].registration_date.substring(0, 10) : "Не указано"}`;
+        userLogo.src = userInfo[0].logo_img || "";
+    } else {
+        console.log('Информация о пользователе не найдена');
+    }
+}
+
+// Функция для создания кнопки добавления/удаления из друзей
+function createFriendshipButton(userId, friendStatus) {
+    const buttonContainer = document.querySelector('.profile-section');
+    const button = document.createElement('button');
+
+    if (friendStatus === 'friend') {
+        button.textContent = 'Удалить из друзей';
+        button.classList.add('remove-friend-button');
+        button.addEventListener('click', () => handleFriendAction(userId, 'remove'));
+    } else {
+        button.textContent = 'Добавить в друзья';
+        button.classList.add('add-friend-button');
+        button.addEventListener('click', () => handleFriendAction(userId, 'add'));
+    }
+
+    buttonContainer.appendChild(button);
+}
+
+// Обработчик действия с другом (добавить/удалить)
+async function handleFriendAction(userId, action) {
+    try {
+        const response = await fetch(action === 'add' ? '/add_friend' : '/remove_friend', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ friendId: userId })
+        });
+
+        if (response.redirected) {
+            window.location.href = response.url;
+        } else {
+            const data = await response.json();
+
+            if (response.ok) {
+                console.log(`Друг успешно ${action === 'add' ? 'добавлен' : 'удален'}`);
+            } else {
+                console.error(`Ошибка при ${action === 'add' ? 'добавлении' : 'удалении'} друга:`, data.error);
+            }
+        }
+    } catch (error) {
+        console.error(`Ошибка при ${action === 'add' ? 'добавлении' : 'удалении'} друга:`, error.message);
+    }
+}
+
+//СТАРЫЙ КОД - РАБОЧИЙ НО НЕ ОПТИМИЗИРОВАННЫЙ
+/*
+document.addEventListener('DOMContentLoaded', async function () {
+    const urlParams = new URLSearchParams(window.location.search);
+    const userId = urlParams.get('user_id');
+
     if (userId) {
         console.log(userId);
         // Если есть параметр user_id, то делаем запрос на сервер для получения данных о пользователе из другой таблицы
@@ -147,4 +275,4 @@ document.addEventListener('DOMContentLoaded', async function () {
             console.log('Информация о пользователе не найдена');
         }
     }
-});
+});*/
