@@ -91,6 +91,12 @@ body {
     border-radius: 10px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     border: 2px solid #3498db; /* цвет границы */
+/*    display: flex;
+    flex-direction: row;
+    justify-content: space-between;*/
+}
+
+.div-space-between {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
@@ -248,4 +254,45 @@ footer {
 
 footer p {
     margin: 0; /* Убираем отступы для абзаца */
+}
+
+#group-chat-adding {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #f0f7ff; /* Светло-синий цвет фона */
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 255, 0.3); /* Мягкая тень */
+    z-index: 1000;
+}
+
+#group-chat-adding label {
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+#friends-add-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+#group-chat-adding button {
+    padding: 10px 20px;
+    margin-top: 10px;
+    background-color: #007bff; /* Синий цвет кнопки */
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#group-chat-adding button:hover {
+    background-color: #0056b3; /* Темно-синий цвет кнопки при наведении */
 }

@@ -555,6 +555,71 @@ app.post('/delete_chat_member', (req, res) => {
     });
 });
 
+app.get('/add_to_chat', async (req, res) => {
+    const chat_id = req.query.chat_id;
+    const user_id = req.session.userId;
+
+    try {
+        // Выполняем запрос к базе данных
+        const {rows} = await pool.query(
+            `SELECT u.user_id, u.username
+             FROM users u
+                      LEFT JOIN (SELECT unnest(string_to_array(members_id, ',')) ::int AS member_id
+                                 FROM chats
+                                 WHERE chat_id = $1) c ON u.user_id = c.member_id
+                      LEFT JOIN friends f ON u.user_id = f.user_id_2
+             WHERE c.member_id IS NULL
+               AND f.user_id_1 = $2;`,
+            [chat_id, user_id]
+        );
+
+        // Отправляем результат клиенту
+        res.json({friends: rows});
+    } catch (error) {
+        console.error('Ошибка при выполнении запроса:', error);
+        res.status(500).json({error: 'Произошла ошибка при выполнении запроса'});
+    }
+
+});
+
+app.post('/add_members_to_chat', async (req, res) => {
+    const { chat_id, users } = req.body;
+
+    let string_add = '';
+    users.forEach((user, index) => {
+        string_add += user.toString(); // Преобразует значение пользователя в строку и добавляет его к строке string_add
+        // Проверяем, является ли текущий пользователь последним в массиве
+        if (index !== users.length - 1) {
+            string_add += ', '; // Добавляем запятую и пробел, если текущий пользователь не последний
+        }
+    });
+
+    try {
+        // Получаем текущих участников чата из базы данных
+        const { rows } = await pool.query('SELECT members_id FROM chats WHERE chat_id = $1', [chat_id]);
+
+        const firstRow = rows[0];
+
+        // Получаем значение members_id из первой строки
+        const membersId = firstRow.members_id;
+
+        const new_member_id = membersId + ', ' + string_add;
+
+        console.log(new_member_id);
+
+        // Обновляем поле member_id в таблице чатов
+        await pool.query('UPDATE chats SET members_id = $1 WHERE chat_id = $2', [new_member_id, chat_id]);
+
+
+        // Перенаправляем пользователя на страницу /message
+        res.redirect('/message');
+    } catch (error) {
+        console.error('Ошибка при добавлении участников в чат:', error);
+        res.status(500).json({ success: false, error: 'Произошла ошибка при добавлении участников в чат' });
+    }
+});
+
+
 app.get('/chat_conversation', (req, res) => {
     const chat_Id = req.query.chatId;
     console.log(chat_Id);

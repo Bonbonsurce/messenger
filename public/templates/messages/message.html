@@ -20,6 +20,16 @@
             </ul>
         </div>
         <div class="dialogs-main">
+
+            <form id="group-chat-adding" style="display: none">
+                <input type="hidden" id="chat-id-to-add" name="chat-id" value="">
+                <label>Добавить участников: </label>
+                <ul id="friends-add-list">
+                </ul>
+                <button id="add-to-chat" onclick="add_member_to_chat()" class="btn-submit"> Добавить </button>
+                <button id="add-to-chat-close" onclick="close_adding()" class="btn-submit"> Закрыть </button>
+            </form>
+
             <div class="dialogs-section">
 
             </div>

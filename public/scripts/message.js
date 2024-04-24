@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             users.forEach(user => {
                 const dialogDiv = document.createElement('div');
                 dialogDiv.classList.add('dialog-div');
+                dialogDiv.classList.add('div-space-between');
                 const usernameLink = document.createElement('a');
                 usernameLink.textContent = user.username;
                 usernameLink.classList.add('auth-link');
@@ -59,13 +60,18 @@ document.addEventListener('DOMContentLoaded', async function() {
                 const dialogDiv = document.createElement('div');
                 dialogDiv.classList.add('dialog-div');
                 dialogDiv.classList.add('red-background');
+                dialogDiv.classList.add('div-space-between');
                 const chatnameLink = document.createElement('a');
                 chatnameLink.textContent = chat.chat_name;
                 chatnameLink.classList.add('auth-link');
                 chatnameLink.href = `/message?chat_id=${chat.chat_id}`;
                 dialogDiv.appendChild(chatnameLink);
 
-                // Создаем блок с кнопкой удаления диалога
+                // Создаем блок с кнопками
+                const buttonsContainer = document.createElement('div');
+                buttonsContainer.classList.add('buttons-container');
+
+                // Создаем кнопку удаления диалога
                 const deleteButton = document.createElement('div');
                 deleteButton.classList.add('delete-button');
                 deleteButton.textContent = '❌'; // Вставляем крестик
@@ -75,8 +81,31 @@ document.addEventListener('DOMContentLoaded', async function() {
                     delete_chat(chat.chat_id);
                 });
 
-                // Добавляем кнопку удаления в блок диалога
-                dialogDiv.appendChild(deleteButton);
+                // Добавляем кнопку удаления в блок с кнопками
+                buttonsContainer.appendChild(deleteButton);
+
+                const inviteButton = document.createElement('div');
+                inviteButton.classList.add('invite-button');
+                inviteButton.textContent = '➕'; // Используем символ с более крупным размером плюса
+                inviteButton.style.backgroundColor = 'blue'; // Синий фон
+
+                // Назначаем обработчик события для кнопки "Пригласить участника"
+                inviteButton.addEventListener('click', () => {
+                    inviteParticipant(chat.chat_id); // Передаем параметр chat_id в функцию inviteParticipant
+                });
+
+                inviteButton.addEventListener('click', () => {
+                    const form = document.getElementById('group-chat-adding');
+                    const chatIdInput = document.getElementById('chat-id-to-add'); // Получаем скрытое поле input с идентификатором чата
+                    const chatId = chat.chat_id; // Получаем идентификатор чата (замените на вашу логику получения идентификатора)
+                    chatIdInput.value = chatId;
+                    form.style.display = 'block'; // Показываем форму при нажатии на кнопку "Пригласить участника"
+                });
+
+                // Добавляем кнопку "Пригласить участника" в блок диалога
+                dialogDiv.appendChild(inviteButton);
+                // Добавляем блок с кнопками в блок диалога
+                dialogDiv.appendChild(buttonsContainer);
 
                 dialogsSection.appendChild(dialogDiv);
             });
@@ -312,8 +341,6 @@ function create_chat(){
                 // Дополнительная обработка ошибки
             });
 
-
-
         // Очистим поля формы после создания чата
         document.getElementById("chat-name").value = "";
 
@@ -355,5 +382,97 @@ async function delete_chat(chat_id){
         window.location.href = '/message';
     } catch (error) {
         console.log('Ошибка при удалении чата: ', error);
+    }
+}
+
+async function inviteParticipant(chat_id){
+    const form = document.getElementById('group-chat-adding');
+    const chatIdInput = document.getElementById('chat-id-to-add'); // Получаем скрытое поле input с идентификатором чата
+    //const chatId = chat_id; // Получаем идентификатор чата (замените на вашу логику получения идентификатора)
+    chatIdInput.value = chat_id;
+    form.style.display = 'block'; // Показываем форму при нажатии на кнопку "Пригласить участника"
+
+    try {
+        // Получаем значение из скрытого поля input
+        //const chat_id = document.getElementById('chat-id-to-add').value;
+
+        const response = await fetch(`/add_to_chat?chat_id=${chat_id}`);
+        const data = await response.json();
+
+        // Проверяем, содержит ли ответ ошибку
+        if (data.error) {
+            console.error('Ошибка:', data.error);
+            return;
+        }
+
+        // Получаем информацию о друзьях
+        const friends = data.friends;
+        console.log(friends);
+        // Получаем ссылку на список друзей
+        const friendsList = document.getElementById('friends-add-list');
+
+        // Очищаем список перед добавлением новых друзей
+        friendsList.innerHTML = '';
+        // Для каждого друга создаем элемент списка и чекбокс
+        friends.forEach(friend => {
+            const listItem = document.createElement('li');
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.value = friend.user_id; // Устанавливаем значение чекбокса равное идентификатору друга
+            const label = document.createElement('label');
+            label.textContent = friend.username; // Устанавливаем текст метки равным имени друга
+            listItem.appendChild(checkbox);
+            listItem.appendChild(label);
+            friendsList.appendChild(listItem);
+        });
+
+    } catch (error) {
+        console.log("Ошибка при добавлении участника чата:", error);
+    }
+}
+
+function close_adding() {
+    const form = document.getElementById('group-chat-adding');
+    form.style.display = 'none';
+}
+
+async function add_member_to_chat() {
+    // Получаем список чекбоксов
+    const checkboxes = document.querySelectorAll('#friends-add-list input[type="checkbox"]:checked');
+
+    // Создаем массив для хранения выбранных пользователей
+    const selectedUsers = [];
+
+    // Перебираем чекбоксы и добавляем выбранных пользователей в массив
+    checkboxes.forEach(checkbox => {
+        selectedUsers.push(checkbox.value);
+    });
+
+    // Получаем идентификатор чата из скрытого поля
+    const chatId = document.getElementById('chat-id-to-add').value;
+
+    try {
+        // Отправляем запрос на сервер для добавления выбранных пользователей в чат
+        const response = await fetch('/add_members_to_chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                chat_id: chatId,
+                users: selectedUsers
+            })
+        });
+
+        const data = await response.json();
+
+        // Проверяем, успешно ли добавлены участники
+        if (data.success) {
+            console.log('Участники успешно добавлены в чат');
+        } else {
+            console.error('Ошибка при добавлении участников в чат:', data.error);
+        }
+    } catch (error) {
+        console.error('Ошибка при выполнении запроса:', error);
     }
 }
