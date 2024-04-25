@@ -747,28 +747,34 @@ app.get('/chat_members', (req, res) => {
 });
 
 app.post('/delete_chat_members', async (req, res) => {
-    const {chatId, usersToDelete} = req.body;
+        const {chatId, usersToDelete} = req.body;
 
-    // Проверяем, авторизован ли пользователь
-    const userId = req.session.userId
-    if (!userId) {
-        res.status(401).send('Пользователь не аутентифицирован');
-        return;
-    }
+        // Проверяем, авторизован ли пользователь
+        const userId = req.session.userId
+        if (!userId) {
+            res.status(401).send('Пользователь не аутентифицирован');
+            return;
+        }
 
-    try {
-        // Получаем текущих участников чата из базы данных
-        const {rows} = await pool.query('SELECT members_id FROM chats WHERE chat_id = $1', [chatId]);
-        const firstRow = rows[0];
+        try {
+            // Получаем текущих участников чата из базы данных
+            const {rows} = await pool.query('SELECT members_id FROM chats WHERE chat_id = $1', [chatId]);
+            const firstRow = rows[0];
 
-        // Получаем значение members_id из первой строки
-        let membersId = firstRow.members_id;
+            // Получаем значение members_id из первой строки
+            let membersId = firstRow.members_id;
 
-        // Удаляем выбранных пользователей из списка участников чата
-        usersToDelete.forEach((user, index) => {
+            // Разбить строку на массив и удалить пустые элементы
+            let membersArray = membersId.split(',').filter(Boolean);
+
+        // Удалить выбранных пользователей из массива
+        usersToDelete.forEach(user => {
             const regex = new RegExp(`${user},?\\s*`);
-            membersId = membersId.replace(regex, ''); // Удаляем выбранного пользователя из строки membersId
+            membersArray = membersArray.filter(member => !regex.test(member));
         });
+
+        // Объединить элементы массива обратно в строку
+        membersId = membersArray.join(', ');
 
         // Обновляем поле members_id в таблице чатов
         await pool.query('UPDATE chats SET members_id = $1 WHERE chat_id = $2', [membersId, chatId]);

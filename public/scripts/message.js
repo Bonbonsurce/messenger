@@ -187,6 +187,12 @@ document.addEventListener('DOMContentLoaded', async function() {
         fetch(`/chat_members?chat_id=${chatId}`)
             .then(response => response.json())
             .then(data => {
+                if (!data || !data.users_info || data.users_info.length === 0 || !data.users_info[0].members_id) {
+                    // Если информация пуста, перенаправляем пользователя
+                    window.location.href = '/message';
+                    return;
+                }
+
                 // Получаем информацию о пользователях из JSON-ответа
                 const usersInfo = data.users_info;
                 console.log(usersInfo);
