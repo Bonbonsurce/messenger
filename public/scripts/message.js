@@ -183,6 +183,63 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (chatId) {
         document.getElementById('chat-messageForm').style.display = 'block';
         document.getElementById('chat_id').value = chatId;
+
+        fetch(`/chat_members?chat_id=${chatId}`)
+            .then(response => response.json())
+            .then(data => {
+                // Получаем информацию о пользователях из JSON-ответа
+                const usersInfo = data.users_info;
+                console.log(usersInfo);
+                let members_id = usersInfo[0].members_id;
+
+                // Получаем элемент списка членов чата
+                const chatMembersList = document.querySelector('.chat-members-check');
+
+                // Очищаем список перед добавлением новых элементов
+                chatMembersList.innerHTML = '';
+
+                // Получаем информацию о последнем пользователе (пользователе с индексом usersInfo.length - 1)
+                const lastUser = usersInfo[usersInfo.length - 1];
+                usersInfo.pop();
+
+                // Проверяем, является ли текущий пользователь создателем чата
+                if (lastUser.user_id === usersInfo[0].creator_id) {
+                    usersInfo.forEach(user => {
+                        const listItem = document.createElement('li');
+                        listItem.textContent = user.username; // Здесь может быть любая информация о пользователе, которую вы хотите отобразить
+
+                        // Создаем чекбокс для каждого пользователя
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.value = user.user_id;
+                        if (user.user_id !== lastUser.user_id) {
+                            listItem.appendChild(checkbox);
+                        }
+
+                        chatMembersList.appendChild(listItem);
+                    });
+                    // Создаем кнопку "Удалить выбранных"
+                    const deleteButton = document.createElement('button');
+                    deleteButton.id = 'delete-members-chat';
+                    deleteButton.textContent = 'Удалить выбранных';
+                    deleteButton.addEventListener('click', delete_members); // Привязываем функцию delete_members к событию click кнопки
+
+                    // Добавляем кнопку в DOM после списка пользователей
+                    chatMembersList.after(deleteButton);
+
+                } else {
+                    usersInfo.forEach(user => {
+                        const listItem = document.createElement('li');
+                        listItem.textContent = user.username;
+
+                        chatMembersList.appendChild(listItem);
+                    });
+                }
+
+                // Показываем форму с участниками чата
+                document.querySelector('.list-chat-members').style.display = 'block';
+            })
+            .catch(error => console.error('Ошибка при получении информации о пользователях чата:', error));
     }
 });
 
@@ -484,4 +541,58 @@ async function add_member_to_chat() {
     } catch (error) {
         console.error('Ошибка при выполнении запроса:', error);
     }
+}
+
+function delete_members() {
+    // Получаем все чекбоксы
+    const checkboxes = document.querySelectorAll('.chat-members-check input[type="checkbox"]');
+
+    // Проверяем, выбран ли хотя бы один чекбокс
+    let anyChecked = false;
+    checkboxes.forEach(checkbox => {
+        if (checkbox.checked) {
+            anyChecked = true;
+            return;
+        }
+    });
+
+    // Если ни один чекбокс не выбран, выводим сообщение об ошибке
+    if (!anyChecked) {
+        alert('Выберите хотя бы одного пользователя для удаления');
+        return;
+    }
+
+    // Получаем ID чата
+    const chatId = document.getElementById('chat_id').value;
+
+    // Создаем массив для хранения ID пользователей, которых нужно удалить
+    const usersToDelete = [];
+
+    // Проходим по всем чекбоксам и добавляем ID выбранных пользователей в массив usersToDelete
+    checkboxes.forEach(checkbox => {
+        if (checkbox.checked) {
+            usersToDelete.push(checkbox.value);
+        }
+    });
+
+    // Отправляем запрос на сервер для удаления выбранных пользователей из чата
+    fetch('/delete_chat_members', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ chatId: chatId, usersToDelete: usersToDelete })
+    })
+        .then(response => {
+            if (response.ok) {
+                // Обновляем страницу или выполняем другие действия после успешного удаления
+                window.location.reload();
+            } else {
+                throw new Error('Ошибка удаления пользователей из чата');
+            }
+        })
+        .catch(error => {
+            console.error('Произошла ошибка:', error);
+            alert('Произошла ошибка при удалении пользователей из чата');
+        });
 }

@@ -712,6 +712,75 @@ app.get('/message', (req, res) => {
     }
 });
 
+app.get('/chat_members', (req, res) => {
+    const chatId = req.query.chat_id;
+    const this_user = req.session.userId;
+
+    const query = {
+        text: `
+            SELECT c.chat_id, c.chat_name, c.creator_id, c.creation_date, c.members_id, u.username, u.user_id
+            FROM public.chats c
+                     JOIN public.users u ON u.user_id = ANY(string_to_array(c.members_id, ', ')::int[])
+            WHERE c.chat_id = $1;
+      `,
+        values: [chatId],
+    };
+
+    pool.query(query, (err, result) => {
+        if (err) {
+            res.status(500).send('Ошибка при выполнении запроса');
+            return;
+        }
+        const users = result.rows;
+        // Создаем объект для текущего пользователя
+
+        const currentUser = {
+            user_id: this_user,
+            username: req.session.username
+        };
+
+        // Добавляем информацию о текущем пользователе к массиву пользователей
+        users.push(currentUser);
+
+        res.json({ users_info: users });
+    });
+});
+
+app.post('/delete_chat_members', async (req, res) => {
+    const {chatId, usersToDelete} = req.body;
+
+    // Проверяем, авторизован ли пользователь
+    const userId = req.session.userId
+    if (!userId) {
+        res.status(401).send('Пользователь не аутентифицирован');
+        return;
+    }
+
+    try {
+        // Получаем текущих участников чата из базы данных
+        const {rows} = await pool.query('SELECT members_id FROM chats WHERE chat_id = $1', [chatId]);
+        const firstRow = rows[0];
+
+        // Получаем значение members_id из первой строки
+        let membersId = firstRow.members_id;
+
+        // Удаляем выбранных пользователей из списка участников чата
+        usersToDelete.forEach((user, index) => {
+            const regex = new RegExp(`${user},?\\s*`);
+            membersId = membersId.replace(regex, ''); // Удаляем выбранного пользователя из строки membersId
+        });
+
+        // Обновляем поле members_id в таблице чатов
+        await pool.query('UPDATE chats SET members_id = $1 WHERE chat_id = $2', [membersId, chatId]);
+
+        // Отправляем ответ об успешном удалении
+        res.status(200).json({success: true, message: 'Участники успешно удалены из чата'});
+    } catch (error) {
+        console.error('Ошибка при удалении участников из чата:', error);
+        res.status(500).json({success: false, error: 'Произошла ошибка при удалении участников из чата'});
+    }
+});
+
 app.get('/profile', (req, res) => {
     // Проверяем, аутентифицирован ли пользователь
     if (req.session.authenticated) {
