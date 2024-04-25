@@ -57,6 +57,7 @@
                 <button id="close-new-users" onclick="close_users()" class="btn-submit"> Закрыть </button>
             </form>
             <button id="write_new_user" onclick="write_new()" class="btn-submit">Написать конкретному пользователю</button>
+
             <div>
                 <form id="group-chat" style="display: none">
                     <label for="chat-name">Введите название чата:</label>
@@ -69,11 +70,14 @@
                     <button id="start-group-chat-close" onclick="close_group()" class="btn-submit"> Закрыть </button>
                 </form>
                 <button id="start-group-chat" onclick="group_chat()" class="btn-submit">Создать групповой чат</button>
-
                 <div id="error-message" style="display: none; color: red;">
                     <span id="error-text"></span>
                     <button id="close-error" onclick="closeErrorMessage()">Закрыть</button>
                 </div>
+            </div>
+
+            <div class="list-chat-members" style="display: none;">
+
             </div>
         </div>
     </div>

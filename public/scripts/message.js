@@ -408,24 +408,33 @@ async function inviteParticipant(chat_id){
         // Получаем информацию о друзьях
         const friends = data.friends;
         console.log(friends);
+
         // Получаем ссылку на список друзей
         const friendsList = document.getElementById('friends-add-list');
 
         // Очищаем список перед добавлением новых друзей
         friendsList.innerHTML = '';
-        // Для каждого друга создаем элемент списка и чекбокс
-        friends.forEach(friend => {
+
+        if (friends.length === 0) {
             const listItem = document.createElement('li');
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.value = friend.user_id; // Устанавливаем значение чекбокса равное идентификатору друга
             const label = document.createElement('label');
-            label.textContent = friend.username; // Устанавливаем текст метки равным имени друга
-            listItem.appendChild(checkbox);
+            label.textContent = 'Все друзья добавлены';
             listItem.appendChild(label);
             friendsList.appendChild(listItem);
-        });
-
+        } else {
+            // Для каждого друга создаем элемент списка и чекбокс
+            friends.forEach(friend => {
+                const listItem = document.createElement('li');
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = friend.user_id; // Устанавливаем значение чекбокса равное идентификатору друга
+                const label = document.createElement('label');
+                label.textContent = friend.username; // Устанавливаем текст метки равным имени друга
+                listItem.appendChild(checkbox);
+                listItem.appendChild(label);
+                friendsList.appendChild(listItem);
+            });
+        }
     } catch (error) {
         console.log("Ошибка при добавлении участника чата:", error);
     }
