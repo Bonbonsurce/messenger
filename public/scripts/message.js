@@ -23,7 +23,9 @@ document.addEventListener('DOMContentLoaded', async function() {
             // Выполнение запроса на получение всех сообщений
             const response = await fetch('/all_mes_show');
             const { error, users, chats} = await response.json();
+
             console.log('Это чаты:', chats);
+
             if (error) {
                 console.error('Ошибка при выполнении запроса:', error);
                 return;
@@ -147,7 +149,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         try {
             const response = await fetch(`/chat_conversation?chatId=${chatId}`);
             const { error, chat_messages } = await response.json();
-            console.log('Hello', chat_messages);
+
             if (error) {
                 console.error('Ошибка при выполнении запроса:', error);
                 return;
@@ -195,8 +197,8 @@ document.addEventListener('DOMContentLoaded', async function() {
 
                 // Получаем информацию о пользователях из JSON-ответа
                 const usersInfo = data.users_info;
-                console.log(usersInfo);
-                let members_id = usersInfo[0].members_id;
+
+                const membersIds = data.users_info.map(user => usersInfo[0].members_id);
 
                 // Получаем элемент списка членов чата
                 const chatMembersList = document.querySelector('.chat-members-check');
@@ -370,6 +372,7 @@ function create_chat(){
             selectedParticipants.push(checkbox.value);
         });
 
+
         if (selectedParticipants.length == 0) {
             alert('Выберите хотя бы одного участника');
             displayErrorMessage('Выберите хотя бы одного участника');
@@ -464,13 +467,11 @@ async function inviteParticipant(chat_id){
 
         // Проверяем, содержит ли ответ ошибку
         if (data.error) {
-            console.error('Ошибка:', data.error);
             return;
         }
 
         // Получаем информацию о друзьях
         const friends = data.friends;
-        console.log(friends);
 
         // Получаем ссылку на список друзей
         const friendsList = document.getElementById('friends-add-list');

@@ -396,14 +396,19 @@ app.post('/create_chat', (req, res) => {
 
         const creator_id = req.session.userId;
         participants.push(creator_id);
-        const participantsText = participants.join(', ');
+
+        // Преобразуем элементы массива participants в целые числа
+        const participantsInt = participants.map(participant => parseInt(participant, 10));
+
+        // Преобразуем массив participantsInt в JSON-строку
+        const participantsJson = JSON.stringify(participantsInt);
 
         const query = `
             INSERT INTO chats(chat_name, creator_id, creation_date, members_id)
             VALUES ($1, $2, NOW(), $3)
         `;
 
-        const values = [chatName, creator_id, participantsText];
+        const values = [chatName, creator_id, participantsJson];
 
         pool.query(query, values, (error, results) => {
             if (error) {
@@ -499,7 +504,11 @@ app.post('/delete_chat_member', (req, res) => {
     const deleteQuery = {
         text: `
             UPDATE public.chats
-            SET members_id = REPLACE(members_id, $1, '')
+            SET members_id = (
+                SELECT json_agg(member_id::int)
+                FROM json_array_elements_text(chats.members_id) AS member_id
+                WHERE member_id::int != $1
+                )
             WHERE chat_id = $2;
         `,
         values: [user_id, chat_id]
@@ -511,7 +520,7 @@ app.post('/delete_chat_member', (req, res) => {
             SELECT COUNT(*) AS num_members
             FROM public.chats
             WHERE chat_id = $1
-            AND members_id != '';
+              AND jsonb_array_length(members_id::jsonb) > 0;
         `,
         values: [chat_id]
     };
@@ -560,39 +569,29 @@ app.get('/add_to_chat', async (req, res) => {
     const user_id = req.session.userId;
 
     try {
-        // Выполняем запрос к базе данных
-        const {rows} = await pool.query(
+        const { rows } = await pool.query(
             `SELECT u.user_id, u.username
-             FROM users u
-                      LEFT JOIN (SELECT unnest(string_to_array(members_id, ',')) ::int AS member_id
-                                 FROM chats
-                                 WHERE chat_id = $1) c ON u.user_id = c.member_id
-                      LEFT JOIN friends f ON u.user_id = f.user_id_2
+             FROM public.users u
+             LEFT JOIN (
+                 SELECT json_array_elements_text(members_id::json)::int AS member_id
+                 FROM public.chats
+                 WHERE chat_id = $1
+             ) c ON u.user_id = c.member_id
+             LEFT JOIN public.friends f ON u.user_id = f.user_id_2
              WHERE c.member_id IS NULL
-               AND f.user_id_1 = $2;`,
+             AND f.user_id_1 = $2;`,
             [chat_id, user_id]
         );
 
-        // Отправляем результат клиенту
-        res.json({friends: rows});
+        res.json({ friends: rows });
     } catch (error) {
         console.error('Ошибка при выполнении запроса:', error);
-        res.status(500).json({error: 'Произошла ошибка при выполнении запроса'});
+        res.status(500).json({ error: 'Произошла ошибка при выполнении запроса' });
     }
-
 });
 
 app.post('/add_members_to_chat', async (req, res) => {
     const { chat_id, users } = req.body;
-
-    let string_add = '';
-    users.forEach((user, index) => {
-        string_add += user.toString(); // Преобразует значение пользователя в строку и добавляет его к строке string_add
-        // Проверяем, является ли текущий пользователь последним в массиве
-        if (index !== users.length - 1) {
-            string_add += ', '; // Добавляем запятую и пробел, если текущий пользователь не последний
-        }
-    });
 
     try {
         // Получаем текущих участников чата из базы данных
@@ -601,15 +600,21 @@ app.post('/add_members_to_chat', async (req, res) => {
         const firstRow = rows[0];
 
         // Получаем значение members_id из первой строки
-        const membersId = firstRow.members_id;
+        let membersId = firstRow.members_id;
 
-        const new_member_id = membersId + ', ' + string_add;
+        // Добавляем новых пользователей к массиву
+        users.forEach((user) => {
+            // Преобразуем строку в число
+            const userId = parseInt(user, 10);
+            // Проверяем, является ли userId числом
+            if (!isNaN(userId)) {
+                // Добавляем userId в массив
+                membersId.push(userId);
+            }
+        });
 
-        console.log(new_member_id);
-
-        // Обновляем поле member_id в таблице чатов
-        await pool.query('UPDATE chats SET members_id = $1 WHERE chat_id = $2', [new_member_id, chat_id]);
-
+        // Преобразуем массив обратно в формат JSON и обновляем базу данных
+        await pool.query('UPDATE chats SET members_id = $1 WHERE chat_id = $2', [JSON.stringify(membersId), chat_id]);
 
         // Перенаправляем пользователя на страницу /message
         res.redirect('/message');
@@ -622,7 +627,7 @@ app.post('/add_members_to_chat', async (req, res) => {
 
 app.get('/chat_conversation', (req, res) => {
     const chat_Id = req.query.chatId;
-    console.log(chat_Id);
+
     if (!req.session.userId) {
         res.status(401).send('Пользователь не аутентифицирован');
         return;
@@ -646,7 +651,6 @@ app.get('/chat_conversation', (req, res) => {
             return;
         }
         const chat_messages = result.rows;
-        console.log(chat_messages);
         // Отправляем данные в формате JSON обратно клиенту
         res.json({ chat_messages: chat_messages });
     });
@@ -672,9 +676,11 @@ app.get('/all_mes_show', (req, res) => {
         text: `
             SELECT DISTINCT chat_name, chat_id
             FROM chats
-            WHERE members_id ILIKE $1;
+            WHERE EXISTS (SELECT 1
+                          FROM json_array_elements_text(members_id::json) AS member_id
+                          WHERE member_id ~ '^\\d+$' AND member_id::int = $1);
         `,
-        values: ['%' + userId + '%'],
+        values: [userId],
     };
 
     Promise.all([
@@ -684,7 +690,7 @@ app.get('/all_mes_show', (req, res) => {
         .then(results => {
             const receiverUsers = results[0].rows;
             const chatNames = results[1].rows;
-
+            console.log(chatNames);
             // Отправляем данные в формате JSON обратно клиенту
             res.json({ users: receiverUsers, chats: chatNames });
         })
@@ -720,7 +726,7 @@ app.get('/chat_members', (req, res) => {
         text: `
             SELECT c.chat_id, c.chat_name, c.creator_id, c.creation_date, c.members_id, u.username, u.user_id
             FROM public.chats c
-                     JOIN public.users u ON u.user_id = ANY(string_to_array(c.members_id, ', ')::int[])
+                     JOIN public.users u ON u.user_id IN (SELECT (json_array_elements_text(c.members_id::json)::int))
             WHERE c.chat_id = $1;
       `,
         values: [chatId],
@@ -747,45 +753,50 @@ app.get('/chat_members', (req, res) => {
 });
 
 app.post('/delete_chat_members', async (req, res) => {
-        const {chatId, usersToDelete} = req.body;
+    const { chatId, usersToDelete } = req.body;
 
-        // Проверяем, авторизован ли пользователь
-        const userId = req.session.userId
-        if (!userId) {
-            res.status(401).send('Пользователь не аутентифицирован');
-            return;
-        }
+    // Проверяем, авторизован ли пользователь
+    const userId = req.session.userId
+    if (!userId) {
+        res.status(401).send('Пользователь не аутентифицирован');
+        return;
+    }
+    console.log(usersToDelete);
 
-        try {
-            // Получаем текущих участников чата из базы данных
-            const {rows} = await pool.query('SELECT members_id FROM chats WHERE chat_id = $1', [chatId]);
-            const firstRow = rows[0];
+    try {
+        // Получаем текущих участников чата из базы данных
+        const { rows } = await pool.query('SELECT members_id FROM chats WHERE chat_id = $1', [chatId]);
+        const firstRow = rows[0];
 
-            // Получаем значение members_id из первой строки
-            let membersId = firstRow.members_id;
+        // Получаем значение members_id из первой строки
+        let membersId = firstRow.members_id;
+        // console.log(membersId);
+        // // Парсим значение membersId из формата JSON
+        // const membersArray = JSON.parse(membersId);
 
-            // Разбить строку на массив и удалить пустые элементы
-            let membersArray = membersId.split(',').filter(Boolean);
-
-        // Удалить выбранных пользователей из массива
+        // Удаляем выбранных пользователей из массива
         usersToDelete.forEach(user => {
-            const regex = new RegExp(`${user},?\\s*`);
-            membersArray = membersArray.filter(member => !regex.test(member));
+            // Преобразовываем строку пользователя в целое число
+            const userInt = parseInt(user, 10);
+            // Ищем индекс пользователя в массиве membersId
+            const index = membersId.indexOf(userInt);
+            // Если пользователь найден, удаляем его из массива
+            if (index !== -1) {
+                membersId.splice(index, 1);
+            }
         });
 
-        // Объединить элементы массива обратно в строку
-        membersId = membersArray.join(', ');
-
-        // Обновляем поле members_id в таблице чатов
-        await pool.query('UPDATE chats SET members_id = $1 WHERE chat_id = $2', [membersId, chatId]);
+        // Преобразуем массив обратно в формат JSON и обновляем базу данных
+        await pool.query('UPDATE chats SET members_id = $1 WHERE chat_id = $2', [JSON.stringify(membersId), chatId]);
 
         // Отправляем ответ об успешном удалении
-        res.status(200).json({success: true, message: 'Участники успешно удалены из чата'});
+        res.status(200).json({ success: true, message: 'Участники успешно удалены из чата' });
     } catch (error) {
         console.error('Ошибка при удалении участников из чата:', error);
-        res.status(500).json({success: false, error: 'Произошла ошибка при удалении участников из чата'});
+        res.status(500).json({ success: false, error: 'Произошла ошибка при удалении участников из чата' });
     }
 });
+
 
 app.get('/profile', (req, res) => {
     // Проверяем, аутентифицирован ли пользователь
