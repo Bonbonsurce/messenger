@@ -47,11 +47,8 @@ app.use(session({
 
 app.use(express.static(__dirname + '/public'));
 
-// Middleware для CSRF токенов
-// const csrfProtection = csrf({ cookie: true });
-//
 // // Применение CSRF токенов ко всем маршрутам
-// app.use(csrfProtection);
+//app.use(csrf());
 
 const options = {
     key: fs.readFileSync('server.key'),
