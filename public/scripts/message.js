@@ -12,6 +12,62 @@ function closeErrorMessage() {
     errorMessage.style.display = 'none';
 }
 
+function createNameLink(data) {
+    const link = document.createElement('a');
+    link.textContent = data.username || data.chat_name;
+    link.classList.add('auth-link');
+    if (data.chat_id) {
+        link.href = `/message?chat_id=${data.chat_id}`;
+    } else if (data.user_id) {
+        link.href = `/message?user_id=${data.user_id}`;
+    }
+    return link;
+}
+
+function createButton(data, type) {
+    const button = document.createElement('div');
+    button.classList.add(type);
+    button.textContent = type === 'invite-button' ? '➕' : '❌'; // Используем символ с более крупным размером плюса или крестик
+    button.style.backgroundColor = type === 'invite-button' ? 'blue' : ''; // Синий фон или отсутствие фона
+
+    button.addEventListener('click', () => {
+        if (data.user_id) {
+            delete_dialog(data.user_id); // Вызываем функцию delete_dialog с user_id
+        } else if (data.chat_id) {
+            if (type === 'invite-button') {
+                inviteParticipant(data.chat_id);
+                const form = document.getElementById('group-chat-adding');
+                const chatIdInput = document.getElementById('chat-id-to-add'); // Получаем скрытое поле input с идентификатором чата
+                const chatId = data.chat_id; // Получаем идентификатор чата (замените на вашу логику получения идентификатора)
+                chatIdInput.value = chatId;
+                form.style.display = 'block';
+            }
+            else {
+                delete_chat(data.chat_id); // Вызываем функцию delete_dialog с chat_id
+            }
+        }
+    });
+
+    return button;
+}
+
+function createDialogDiv(messages) {
+    const dialogDiv = document.createElement('div');
+    dialogDiv.classList.add('dialog-div');
+
+    if (messages && messages.length > 0) {
+        messages.forEach(message => {
+            const textMessage = document.createElement('p');
+            textMessage.textContent = `Отправил ${message.username}: ${message.message_text}`;
+            dialogDiv.appendChild(textMessage);
+        });
+    } else {
+        console.log('Нет сообщений для отображения');
+    }
+
+    return dialogDiv;
+}
+
 document.addEventListener('DOMContentLoaded', async function() {
     const urlParams = new URLSearchParams(window.location.search);
     const userId = urlParams.get('user_id');
@@ -35,77 +91,33 @@ document.addEventListener('DOMContentLoaded', async function() {
             const dialogsSection = document.querySelector('.dialogs-section');
             users.forEach(user => {
                 const dialogDiv = document.createElement('div');
-                dialogDiv.classList.add('dialog-div');
-                dialogDiv.classList.add('div-space-between');
-                const usernameLink = document.createElement('a');
-                usernameLink.textContent = user.username;
-                usernameLink.classList.add('auth-link');
-                usernameLink.href = `/message?user_id=${user.user_id}`;
-                dialogDiv.appendChild(usernameLink);
+                dialogDiv.classList.add('dialog-div', 'div-space-between');
 
-                // Создаем блок с кнопкой удаления диалога
-                const deleteButton = document.createElement('div');
-                deleteButton.classList.add('delete-button');
-                deleteButton.textContent = '❌'; // Вставляем крестик
+                const userNameLink = createNameLink(user);
+                dialogDiv.appendChild(userNameLink);
 
-                // Назначаем обработчик события для кнопки удаления диалога
-                deleteButton.addEventListener('click', () => {
-                    delete_dialog(user.user_id); // Вызываем функцию delete_dialog с user_id
-                });
-
-                // Добавляем кнопку удаления в блок диалога
+                const deleteButton = createButton(user, 'delete-button');
                 dialogDiv.appendChild(deleteButton);
 
                 dialogsSection.appendChild(dialogDiv);
             });
             chats.forEach(chat => {
                 const dialogDiv = document.createElement('div');
-                dialogDiv.classList.add('dialog-div');
-                dialogDiv.classList.add('red-background');
-                dialogDiv.classList.add('div-space-between');
-                const chatnameLink = document.createElement('a');
-                chatnameLink.textContent = chat.chat_name;
-                chatnameLink.classList.add('auth-link');
-                chatnameLink.href = `/message?chat_id=${chat.chat_id}`;
-                dialogDiv.appendChild(chatnameLink);
+                dialogDiv.classList.add('dialog-div', 'red-background', 'div-space-between');
+
+                const chatNameLink = createNameLink(chat);
+                dialogDiv.appendChild(chatNameLink);
 
                 // Создаем блок с кнопками
                 const buttonsContainer = document.createElement('div');
                 buttonsContainer.classList.add('buttons-container');
 
-                // Создаем кнопку удаления диалога
-                const deleteButton = document.createElement('div');
-                deleteButton.classList.add('delete-button');
-                deleteButton.textContent = '❌'; // Вставляем крестик
-
-                // Назначаем обработчик события для кнопки удаления диалога
-                deleteButton.addEventListener('click', () => {
-                    delete_chat(chat.chat_id);
-                });
-
-                // Добавляем кнопку удаления в блок с кнопками
+                const deleteButton = createButton(chat, 'delete-button');
                 buttonsContainer.appendChild(deleteButton);
 
-                const inviteButton = document.createElement('div');
-                inviteButton.classList.add('invite-button');
-                inviteButton.textContent = '➕'; // Используем символ с более крупным размером плюса
-                inviteButton.style.backgroundColor = 'blue'; // Синий фон
-
-                // Назначаем обработчик события для кнопки "Пригласить участника"
-                inviteButton.addEventListener('click', () => {
-                    inviteParticipant(chat.chat_id); // Передаем параметр chat_id в функцию inviteParticipant
-                });
-
-                inviteButton.addEventListener('click', () => {
-                    const form = document.getElementById('group-chat-adding');
-                    const chatIdInput = document.getElementById('chat-id-to-add'); // Получаем скрытое поле input с идентификатором чата
-                    const chatId = chat.chat_id; // Получаем идентификатор чата (замените на вашу логику получения идентификатора)
-                    chatIdInput.value = chatId;
-                    form.style.display = 'block'; // Показываем форму при нажатии на кнопку "Пригласить участника"
-                });
-
-                // Добавляем кнопку "Пригласить участника" в блок диалога
+                const inviteButton = createButton(chat, 'invite-button');
                 dialogDiv.appendChild(inviteButton);
+
                 // Добавляем блок с кнопками в блок диалога
                 dialogDiv.appendChild(buttonsContainer);
 
@@ -127,20 +139,9 @@ document.addEventListener('DOMContentLoaded', async function() {
 
             // Добавление сообщений в диалог
             const dialogsSection = document.querySelector('.dialogs-section');
-            const dialogDiv = document.createElement('div');
-            dialogDiv.classList.add('dialog-div');
 
-            if (messages && messages.length > 0) {
-                messages.forEach(message => {
-                    const textMessage = document.createElement('p');
-                    textMessage.textContent = `Отправил ${message.username}: ${message.message_text}`;
-                    dialogDiv.appendChild(textMessage);
-                });
-            } else {
-                console.log('Нет сообщений для отображения');
-            }
+            dialogsSection.appendChild(createDialogDiv(messages));
 
-            dialogsSection.appendChild(dialogDiv);
         } catch (error) {
             console.error('Ошибка при выполнении запроса:', error);
         }
@@ -157,20 +158,8 @@ document.addEventListener('DOMContentLoaded', async function() {
 
             // Добавление сообщений в диалог
             const dialogsSection = document.querySelector('.dialogs-section');
-            const dialogDiv = document.createElement('div');
-            dialogDiv.classList.add('dialog-div');
+            dialogsSection.appendChild(createDialogDiv(chat_messages));
 
-            if (chat_messages && chat_messages.length > 0) {
-                chat_messages.forEach(chat_message => {
-                    const textMessage = document.createElement('p');
-                    textMessage.textContent = `Отправил ${chat_message.user_id}: ${chat_message.message_text}`;
-                    dialogDiv.appendChild(textMessage);
-                });
-            } else {
-                console.log('Нет сообщений для отображения');
-            }
-
-            dialogsSection.appendChild(dialogDiv);
         } catch (error) {
             console.log('Ошибка при выполнении запроса', error);
         }

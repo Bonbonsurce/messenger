@@ -19,7 +19,7 @@
     </div>
 
     <div id="loginForm" style="display: none;">
-        <span class="close-button" onclick="hideLoginForm()">✖</span>
+        <span class="close-button" onclick="this.parentElement.style.display='none'">✖</span>
         <h2>Форма входа</h2>
         <form action="/login" method="post">
             <input type="text" name="username" placeholder="Имя пользователя" required><br>
@@ -29,7 +29,7 @@
     </div>
 
     <div id="registrationForm" style="display: none;">
-        <span class="close-button" onclick="hideRegistrationForm()">✖</span>
+        <span class="close-button" onclick="this.parentElement.style.display='none'">✖</span>
         <h2>Форма регистрации</h2>
         <form action="/register" method="post">
             <input type="text" name="username" placeholder="Имя пользователя" required><br>

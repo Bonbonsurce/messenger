@@ -210,32 +210,32 @@ app.get('/foto', (req, res) => {
 
 app.get('/friends_info', async (req, res) => {
     try {
-        // Пакетный запрос к базе данных
+        // Используем Promise.all для выполнения всех трех запросов одновременно
         const [followsQuery, followersQuery, friendsQuery] = await Promise.all([
             pool.query({
                 text: `SELECT username, following_id
                        FROM followers
-                       JOIN users ON followers.following_id = users.user_id
+                                JOIN users ON followers.following_id = users.user_id
                        WHERE followers.follower_id = $1`,
                 values: [req.session.userId]
             }),
             pool.query({
                 text: `SELECT username, follower_id
                        FROM followers
-                       JOIN users ON followers.follower_id = users.user_id
+                                JOIN users ON followers.follower_id = users.user_id
                        WHERE followers.following_id = $1`,
                 values: [req.session.userId]
             }),
             pool.query({
                 text: `SELECT username, user_id_2
                        FROM friends
-                       JOIN users ON friends.user_id_2 = users.user_id
+                                JOIN users ON friends.user_id_2 = users.user_id
                        WHERE friends.user_id_1 = $1`,
                 values: [req.session.userId]
             })
         ]);
 
-        // Отправка данных клиенту
+        // Отправляем данные клиенту
         res.json({
             follows: followsQuery.rows,
             followers: followersQuery.rows,

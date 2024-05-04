@@ -62,7 +62,7 @@ function displayFriends(friends, listId) {
             let listItem = document.createElement("li");
             let link = document.createElement("a");
             link.classList.add('a-list');
-            link.href = `/profile?user_id=${friend.user_id}`; // Здесь укажите ссылку на профиль пользователя или другую страницу
+            link.href = `/profile?user_id=${friend.user_id}`;
             link.textContent = friend.username;
             listItem.appendChild(link);
             list.appendChild(listItem);
@@ -134,8 +134,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
-// Функция для экранирования HTML
-function escapeHTML(html) {
-    return html.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-}*/
+//
+*/
 
