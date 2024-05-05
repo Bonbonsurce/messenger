@@ -45,25 +45,32 @@ document.addEventListener('DOMContentLoaded', async function() {
         let friends = data.friends;
 
         // Отображаем данные в списках
-        displayFriends(follows,"follow-list");
-        displayFriends(followers, "follower-list");
-        displayFriends(friends, "friend-list");
+        displayGroupOfPeople(follows,"follow-list", 'follow');
+        displayGroupOfPeople(followers, "follower-list", 'follower');
+        displayGroupOfPeople(friends, "friend-list", 'friend');
 
     } catch (error) {
         console.error('Ошибка при получении информации о друзьях:', error);
     }
 });
 
-function displayFriends(friends, listId) {
-    if (friends && friends.length > 0) {
+function displayGroupOfPeople(group, listId, typeGroup) {
+    if (group && group.length > 0) {
         let list = document.getElementById(listId);
         list.innerHTML = "";
-        friends.forEach(friend => {
+        group.forEach(man => {
             let listItem = document.createElement("li");
             let link = document.createElement("a");
             link.classList.add('a-list');
-            link.href = `/profile?user_id=${friend.user_id}`;
-            link.textContent = friend.username;
+            if (typeGroup === 'follow') {
+                link.href = `/profile?user_id=${man.following_id}`;
+            } else if (typeGroup === 'follower') {
+                link.href = `/profile?user_id=${man.follower_id}`;
+            } else {
+                link.href = `/profile?user_id=${man.user_id_2}`;
+            }
+
+            link.textContent = man.username;
             listItem.appendChild(link);
             list.appendChild(listItem);
         });

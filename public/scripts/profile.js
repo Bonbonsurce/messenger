@@ -2,45 +2,31 @@ document.addEventListener('DOMContentLoaded', async function () {
     const urlParams = new URLSearchParams(window.location.search);
     const userId = urlParams.get('user_id');
 
+    console.log(userId);
+
     try {
         if (!userId) {
-            // Если отсутствует идентификатор пользователя, отправляем запрос на получение данных по умолчанию
-            const response = await fetch(`/user_info?user_id=${-1}`);
-            const data = await response.json();
+            const userInfo = await fetchInfo(-1, 'user_info');
+            displayUserInfo(userInfo.info);
 
-            if (data.error) {
-                console.error('Ошибка при выполнении запроса:', data.error);
-                return;
-            }
-
-            const userInfo = data.info;
-
-            // Отображение информации о пользователе
-            displayUserInfo(userInfo);
         } else {
             // Если есть идентификатор пользователя, запрашиваем данные о пользователе и его статусе дружбы
-            const [userData, friendData] = await Promise.all([
-                fetchUserInfo(userId),
-                fetchFriendshipStatus(userId)
+            const [userData, friendStatus] = await Promise.all([
+                fetchInfo(userId, 'user_info'),
+                fetchInfo(userId, 'check_friendship')
             ]);
 
-            const userInfo = userData.info;
-            const friendStatus = friendData.friendshipStatus;
-
             // Отображение информации о пользователе
-            displayUserInfo(userInfo);
-
-            // Создание кнопки в зависимости от статуса дружбы
-            createFriendshipButton(userId, friendStatus);
+            displayUserInfo(userData.info);
+            createFriendshipButton(userId, friendStatus.friendshipStatus);
         }
     } catch (error) {
         console.error('Ошибка при выполнении запроса:', error);
     }
 });
 
-// Функция для получения информации о пользователе
-async function fetchUserInfo(userId) {
-    const response = await fetch(`/user_info?user_id=${userId}`);
+async function fetchInfo(userId, route) {
+    const response = await fetch(`/${route}?user_id=${userId}`);
     const data = await response.json();
 
     if (data.error) {
@@ -50,30 +36,15 @@ async function fetchUserInfo(userId) {
     return data;
 }
 
-// Функция для получения статуса дружбы с пользователем
-async function fetchFriendshipStatus(userId) {
-    const response = await fetch(`/check_friendship?user_id=${userId}`);
-    const data = await response.json();
-
-    if (data.error) {
-        throw new Error(data.error);
-    }
-
-    return data;
-}
 
 // Функция для отображения информации о пользователе
 function displayUserInfo(userInfo) {
-    const userNameElement = document.getElementById('user-name');
-    const userEmailElement = document.getElementById('user-email');
-    const userDateElement = document.getElementById('user-date');
-    const userLogo = document.getElementById('image-logo');
-
     if (userInfo) {
-        userNameElement.textContent = `Имя пользователя: ${userInfo[0].username || "Не указано"}`;
-        userEmailElement.textContent = `Электронная почта пользователя: ${userInfo[0].email || "Не указано"}`;
-        userDateElement.textContent = `Дата регистрации: ${userInfo[0].registration_date ? userInfo[0].registration_date.substring(0, 10) : "Не указано"}`;
-        userLogo.src = userInfo[0].logo_img || "";
+        const userInfoData = userInfo[0];
+        document.getElementById('user-name').textContent = `Имя пользователя: ${userInfoData.username || "Не указано"}`;
+        document.getElementById('user-email').textContent = `Электронная почта пользователя: ${userInfoData.email || "Не указано"}`;
+        document.getElementById('user-date').textContent = `Дата регистрации: ${userInfoData.registration_date ? userInfoData.registration_date.substring(0, 10) : "Не указано"}`;
+        document.getElementById('image-logo').src = userInfoData.logo_img || "";
     } else {
         console.log('Информация о пользователе не найдена');
     }

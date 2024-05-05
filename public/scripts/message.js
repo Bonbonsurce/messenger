@@ -12,10 +12,11 @@ function closeErrorMessage() {
     errorMessage.style.display = 'none';
 }
 
-function createNameLink(data) {
+function createNameLink(data, classLink) {
     const link = document.createElement('a');
     link.textContent = data.username || data.chat_name;
-    link.classList.add('auth-link');
+    link.classList.add(classLink);
+    //link.classList.add('auth-link');
     if (data.chat_id) {
         link.href = `/message?chat_id=${data.chat_id}`;
     } else if (data.user_id) {
@@ -71,7 +72,6 @@ function createDialogDiv(messages) {
 document.addEventListener('DOMContentLoaded', async function() {
     const urlParams = new URLSearchParams(window.location.search);
     const userId = urlParams.get('user_id');
-
     const chatId = urlParams.get('chat_id');
 
     if (userId == null && chatId == null) {
@@ -79,8 +79,6 @@ document.addEventListener('DOMContentLoaded', async function() {
             // Выполнение запроса на получение всех сообщений
             const response = await fetch('/all_mes_show');
             const { error, users, chats} = await response.json();
-
-            console.log('Это чаты:', chats);
 
             if (error) {
                 console.error('Ошибка при выполнении запроса:', error);
@@ -93,7 +91,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 const dialogDiv = document.createElement('div');
                 dialogDiv.classList.add('dialog-div', 'div-space-between');
 
-                const userNameLink = createNameLink(user);
+                const userNameLink = createNameLink(user, 'auth-link');
                 dialogDiv.appendChild(userNameLink);
 
                 const deleteButton = createButton(user, 'delete-button');
@@ -105,7 +103,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 const dialogDiv = document.createElement('div');
                 dialogDiv.classList.add('dialog-div', 'red-background', 'div-space-between');
 
-                const chatNameLink = createNameLink(chat);
+                const chatNameLink = createNameLink(chat, 'auth-link');
                 dialogDiv.appendChild(chatNameLink);
 
                 // Создаем блок с кнопками
@@ -139,7 +137,6 @@ document.addEventListener('DOMContentLoaded', async function() {
 
             // Добавление сообщений в диалог
             const dialogsSection = document.querySelector('.dialogs-section');
-
             dialogsSection.appendChild(createDialogDiv(messages));
 
         } catch (error) {
@@ -266,11 +263,8 @@ async function write_new() {
 
             usernames.forEach(message => {
                 var listItem = document.createElement("li");
-                var userLink = document.createElement("a");
-                userLink.classList.add('a-list');
-                userLink.href = `/message?user_id=${message.user_id}`;
-                userLink.textContent = message.username;
-                listItem.appendChild(userLink);
+                listItem.appendChild(createNameLink(message, 'a-list'));
+
                 userList.appendChild(listItem);
             });
         } else {
@@ -319,8 +313,6 @@ async function group_chat() {
         const friends = data.friends;
 
         let friendsList = document.getElementById('friends-chat-list');
-
-        // Очищаем контейнер перед добавлением новых элементов
         friendsList.innerHTML = '';
 
         // Создаем чекбоксы для каждого друга
@@ -448,18 +440,13 @@ async function inviteParticipant(chat_id){
     form.style.display = 'block'; // Показываем форму при нажатии на кнопку "Пригласить участника"
 
     try {
-        // Получаем значение из скрытого поля input
-        //const chat_id = document.getElementById('chat-id-to-add').value;
-
         const response = await fetch(`/add_to_chat?chat_id=${chat_id}`);
         const data = await response.json();
 
-        // Проверяем, содержит ли ответ ошибку
         if (data.error) {
             return;
         }
 
-        // Получаем информацию о друзьях
         const friends = data.friends;
 
         // Получаем ссылку на список друзей
