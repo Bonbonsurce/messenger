@@ -130,3 +130,14 @@ body {
     border-radius: 10px; /* Добавляем скругление углов рамки */
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Добавляем тень для эффекта поднятости */
 }
+
+footer {
+    background-color: #3498db; /* Нежный синий цвет */
+    color: #fff; /* Белый цвет текста */
+    text-align: center;
+    padding: 20px 0;
+}
+
+footer p {
+    margin: 0; /* Убираем отступы для абзаца */
+}
