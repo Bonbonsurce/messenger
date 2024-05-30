@@ -27,9 +27,9 @@
                 <p id="user-email"></p>
                 <p id="user-date"></p>
             </div>
-            <button class="edit-button">Редактировать информацию</button>
-            <button class="add-photo-button">Изменить аватарку</button>
-            <button class="settings-button">Настройки</button>
+            <button id="id-edit-button" class="edit-button">Редактировать информацию</button>
+            <button id="id-add-photo-button" class="add-photo-button">Изменить аватарку</button>
+            <button id="id-settings-button" class="settings-button">Настройки</button>
             <div class="news-section">
                 <h3>Мои новости</h3>
 
@@ -43,7 +43,7 @@
     <footer>
         <p>&copy; 2024 Месенджер. Все права защищены.</p>
     </footer>
-    
+
     <script>
         document.querySelector('.add-photo-button').addEventListener('click', () => {
             window.location.href = '/upload_form'; // Перенаправляем на страницу загрузки изображения

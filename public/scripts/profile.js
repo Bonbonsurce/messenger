@@ -2,12 +2,13 @@ document.addEventListener('DOMContentLoaded', async function () {
     const urlParams = new URLSearchParams(window.location.search);
     const userId = urlParams.get('user_id');
 
-    console.log(userId);
-
     try {
         if (!userId) {
             const userInfo = await fetchInfo(-1, 'user_info');
             displayUserInfo(userInfo.info);
+            document.getElementById("id-edit-button").style.display = "block";
+            document.getElementById("id-add-photo-button").style.display = "block";
+            document.getElementById("id-settings-button").style.display = "block";
 
         } else {
             // Если есть идентификатор пользователя, запрашиваем данные о пользователе и его статусе дружбы
@@ -15,7 +16,9 @@ document.addEventListener('DOMContentLoaded', async function () {
                 fetchInfo(userId, 'user_info'),
                 fetchInfo(userId, 'check_friendship')
             ]);
-
+            document.getElementById("id-edit-button").style.display = "none";
+            document.getElementById("id-add-photo-button").style.display = "none";
+            document.getElementById("id-settings-button").style.display = "none";
             // Отображение информации о пользователе
             displayUserInfo(userData.info);
             createFriendshipButton(userId, friendStatus.friendshipStatus);
